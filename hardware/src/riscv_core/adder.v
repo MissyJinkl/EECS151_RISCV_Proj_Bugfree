@@ -1,7 +1,7 @@
-module adder #(
-    input [31:0] in0
-    input [31:0] in2
+module adder (
+    input [31:0] in0,
+    input [31:0] in1,
     output [31:0] out
 );
-assign out = in1 +in2;
+assign out = in0 +in1;
 endmodule

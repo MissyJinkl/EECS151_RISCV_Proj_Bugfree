@@ -22,12 +22,12 @@ always @* begin
         4'd6: alu_result = A | B;
         // and
         4'd7: alu_result = A & B;
-        // mul
-        4'd8: alu_result = $signed(A) * $signed(B)[31:0];
+        /* mul
+        4'd8: alu_result = $signed(A) * $signed(B);
         // mulh
         4'd9: alu_result = ($signed(A) * $signed(B)) >> 32;
         // mulhu
-        4'd11: alu_result = (A * B) >> 32;
+        4'd11: alu_result = (A * B) >> 32;*/
         // sub
         4'd12: alu_result = A - B;
         // sra

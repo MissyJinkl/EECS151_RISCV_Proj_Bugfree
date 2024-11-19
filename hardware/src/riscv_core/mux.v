@@ -8,8 +8,8 @@ module mux2to1 #(
 );
 always @* begin
     case (sel)
-        1d'0: out = in0;
-        1d'1: out = in1;
+        1'd0: out = in0;
+        1'd1: out = in1;
         default: out = 0;
     endcase
 end

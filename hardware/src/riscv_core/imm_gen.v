@@ -1,7 +1,7 @@
 module imm_gen(
-    input [31:0] instruction;
-    input [2:0] imm_sel;
-    output reg [31:0] imm;
+    input [31:0] instruction,
+    input [2:0] imm_sel,
+    output reg [31:0] imm
 );
     always @(*) begin
         case(imm_sel)
