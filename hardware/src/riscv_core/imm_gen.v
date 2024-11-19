@@ -1,20 +1,36 @@
 module imm_gen(
     input [31:0] instruction,
-    input [2:0] imm_sel,
     output reg [31:0] imm
 );
     always @(*) begin
-        case(imm_sel)
+        case(instruction[6:2])
             // I-type
-            3'b000: imm = {{21{instruction[31]}}, instruction[30:20]};
+            `OPC_JALR_5: imm = {{21{instruction[31]}}, instruction[30:20]};
+            `OPC_LOAD_5: imm = {{21{instruction[31]}}, instruction[30:20]};
+            // I*-type & arithmetic I
+            `OPC_ARI_ITYPE_5: begin
+                if ((instruction[14:12] == `FNC_SLL) || (instruction[14:12] == `FNC_SRL_SRA)) begin
+                    imm = {{27{1'b0}}, instruction[24:20]}; 
+                end else begin
+                    if((instruction[14:12] == `FNC_SLTU)) imm = {{20'b0}, instruction[31:20]};
+                    else imm = {{21{instruction[31]}}, instruction[30:20]};
+                end
+            end
             // S-type
-            3'b001: imm = {{21{instruction[31]}}, instruction[30:25], instruction[11:7]};
+            `OPC_STORE_5: imm = {{21{instruction[31]}}, instruction[30:25], instruction[11:7]};
             // B-type
-            3'b010: imm = {{20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
+            `OPC_BRANCH_5: imm = {{20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
             // U-type
-            3'b011: imm = {instruction[31:12], {12{1'b0}}};
+            `OPC_LUI_5 : imm = {instruction[31:12], {12{1'b0}}};
+            `OPC_AUIPC_5: imm = {instruction[31:12], {12{1'b0}}};
             // J-type
-            3'b100: imm = {instruction[31], instruction[19:12], instruction[20], instruction[30:21], 1'b0};
+            `OPC_JAL_5: imm = {instruction[31], instruction[19:12], instruction[20], instruction[30:21], 1'b0};
+            // CSR
+            5'b11100: begin
+                if (instruction[14:12] == 3'b101) imm = {{27{1'b0}}, instruction[19:15]}; //csrrwi, alu = 4'd15
+                else if (instruction[14:12] == 3'b001) imm = 32'b0; //csrrw, alu = 4'd0
+            end
+
         endcase
     end
 
