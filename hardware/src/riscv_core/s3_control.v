@@ -13,7 +13,8 @@ module s3_control(
         else pc_sel = 0;
     end
 
-    wire opcode5, func3;
+    wire [4:0] opcode5;
+    wire [2:0] func3;
     assign opcode5 = instruction[6:2];
     assign func3 = instruction[14:12];
 

@@ -8,6 +8,9 @@ module s2_control(
     assign rs1_sel = 2'b10;
     assign rs2_sel = 2'b10;
     assign brun = instruction_s2[13];
+
+    wire [6:0] opcode;
+    wire [2:0] func3;
     assign opcode = instruction_s2[6:0];
     assign func3 = instruction_s2[14:12];
 
