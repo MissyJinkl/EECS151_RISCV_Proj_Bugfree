@@ -25,7 +25,7 @@ module imm_gen(
             `OPC_LUI_5 : imm = {instruction[31:12], {12{1'b0}}};
             `OPC_AUIPC_5: imm = {instruction[31:12], {12{1'b0}}};
             // J-type
-            `OPC_JAL_5: imm = {instruction[31], instruction[19:12], instruction[20], instruction[30:21], 1'b0};
+            `OPC_JAL_5: imm = {{12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
             // CSR
             5'b11100: begin
                 if (instruction[14:12] == 3'b101) imm = {{27{1'b0}}, instruction[19:15]}; //csrrwi, alu = 4'd15
