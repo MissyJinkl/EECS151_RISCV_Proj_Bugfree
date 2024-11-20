@@ -16,8 +16,8 @@ module cpu #(
     wire bios_ena, bios_enb;
     bios_mem bios_mem (
       .clk(clk),
-      .ena(bios_ena),
-      .addra(bios_addra),
+      .ena(1'b1), //modify this?
+      .addra(pc_d),
       .douta(bios_douta),
       .enb(bios_enb),
       .addrb(bios_addrb),
@@ -146,6 +146,22 @@ module cpu #(
       .out(pc_jal)
     );
 
+    // 0/4 mux and adder
+    wire nop_control;
+    wire [31:0] zero_or_4;
+    mux2to1 zero_or_4_mux (
+      .in0(32'd4),
+      .in1(32'd0),
+      .sel(nop_control),
+      .out(zero_or_4)
+    );
+    adder pc_add4 (
+      .in0(pc_q),
+      .in1(zero_or_4),
+      .out(pc_0_4)
+    );
+
     // 
+    bios_douta
 
 endmodule
