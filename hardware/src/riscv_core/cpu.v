@@ -106,4 +106,46 @@ module cpu #(
     // TODO: Your code to implement a fully functioning RISC-V core
     // Add as many modules as you want
     // Feel free to move the memory modules around
+
+    /* stage1: IFD */
+
+    // pc_sel mux
+    wire [31:0] pc_0_4, alu_1, pc_jal, pc_reset, pc_d;
+    wire [1:0] pc_sel;
+    assign pc_reset = RESET_PC;
+    mux4to1 pc_sel_mux (
+      .in0(pc_0_4),
+      .in1(alu_1),
+      .in2(pc_jal),
+      .in3(pc_reset),
+      .sel(pc_sel),
+      .out(pc_d)
+    );
+
+    // instuction reg between stage 1, 2
+    wire [31:0] instruction_s1, instruction_s2;
+    reg32 ins_reg_12 (
+      .clk(clk),
+      .d(instruction_s1),
+      .q(instruction_s2)
+    );
+
+    // pc_register
+    reg32 pc_register (
+      .clk(clk),
+      .d(pc_d),
+      .q(pc_q)
+    );
+
+    // jal adder
+    wire [31:0] jal_label;
+    assign jal_label = {{12{instruction_s1[31]}}, instruction_s1[19:12], instruction_s1[20], instruction_s1[30:21], 1'b0};
+    adder jal_adder (
+      .in0(jal_label),
+      .in1(pc_q),
+      .out(pc_jal)
+    );
+
+    // 
+
 endmodule
