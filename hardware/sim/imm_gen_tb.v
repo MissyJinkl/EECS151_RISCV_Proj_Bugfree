@@ -1,71 +1,69 @@
 `timescale 1ns/1ns
+`include "opcode.vh"
 
 module imm_gen_tb();
-    // Signals for testing
-    reg [31:0] instruction;   // Input instruction
-    reg [2:0] imm_sel;        // Immediate selection signal
-    wire [31:0] imm;          // Output immediate
-    integer error_count = 0;  // Error counter
+    reg [31:0] instruction;      // Input instruction
+    wire [31:0] imm;             // Output immediate value
+    integer error_count = 0;     // Error counter
 
     // Instantiate the imm_gen module
     imm_gen uut (
         .instruction(instruction),
-        .imm_sel(imm_sel),
         .imm(imm)
     );
 
     // Test procedure
     initial begin
-        // Initialize signals
-        instruction = 32'd0;
-        imm_sel = 3'd0;
-
-        // Test Case 1: I-type immediate
-        #10 instruction = 32'b111111111111_00000_000_00001_0010011; // Addi instruction
-        imm_sel = 3'd0; // I-type
-        #10 if (imm !== {{21{instruction[31]}}, instruction[30:20]}) begin
-            $error("I-type Test Failed: instruction=%b, imm_sel=%d, output=%b, expected=%b",
-                   instruction, imm_sel, imm, {{21{instruction[31]}}, instruction[30:20]});
+        // Test Case 1: I-type (JALR/LOAD)
+        instruction = {21'b111111111111111111111, 11'b00000000011}; // imm=0xFFFFFFFC
+        #10 if (imm !== 32'hFFFFFFFC) begin
+            $error("Test Case 1 (I-type) Failed: instruction=%b, imm=%h, expected=0xFFFFFFFC", instruction, imm);
             error_count = error_count + 1;
         end
 
-        // Test Case 2: S-type immediate
-        #10 instruction = 32'b1111111_00001_00010_010_00011_0100011; // Store instruction
-        imm_sel = 3'd1; // S-type
-        #10 if (imm !== {{21{instruction[31]}}, instruction[30:25], instruction[11:7]}) begin
-            $error("S-type Test Failed: instruction=%b, imm_sel=%d, output=%b, expected=%b",
-                   instruction, imm_sel, imm, {{21{instruction[31]}}, instruction[30:25], instruction[11:7]});
+        // Test Case 2: I-type Arithmetic (SRL/SRA)
+        instruction = {27'b0, 5'b00011, 7'b0010011}; // imm=0x03
+        #10 if (imm !== 32'h00000003) begin
+            $error("Test Case 2 (I-type Arithmetic) Failed: instruction=%b, imm=%h, expected=0x00000003", instruction, imm);
             error_count = error_count + 1;
         end
 
-        // Test Case 3: B-type immediate
-        #10 instruction = 32'b1111111_00001_00010_110_11110_1100011; // Branch instruction
-        imm_sel = 3'd2; // B-type
-        #10 if (imm !== {{20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0}) begin
-            $error("B-type Test Failed: instruction=%b, imm_sel=%d, output=%b, expected=%b",
-                   instruction, imm_sel, imm, {{20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0});
+        // Test Case 3: S-type
+        instruction = {7'b1111111, 5'b00011, 5'b00101, 5'b00011, 7'b0100011}; // imm=0xFFFFFFFC
+        #10 if (imm !== 32'hFFFFFFFC) begin
+            $error("Test Case 3 (S-type) Failed: instruction=%b, imm=%h, expected=0xFFFFFFFC", instruction, imm);
             error_count = error_count + 1;
         end
 
-        // Test Case 4: U-type immediate
-        #10 instruction = 32'b11111111_11111111_1111_00000_0110111; // LUI instruction
-        imm_sel = 3'd3; // U-type
-        #10 if (imm !== {instruction[31:12], {12{1'b0}}}) begin
-            $error("U-type Test Failed: instruction=%b, imm_sel=%d, output=%b, expected=%b",
-                   instruction, imm_sel, imm, {instruction[31:12], {12{1'b0}}});
+        // Test Case 4: B-type
+        instruction = {7'b1, 6'b100110, 5'b00011, 5'b00001, 4'b0010, 1'b0, 7'b1100011}; // imm=0x64
+        #10 if (imm !== 32'h00000064) begin
+            $error("Test Case 4 (B-type) Failed: instruction=%b, imm=%h, expected=0x00000064", instruction, imm);
             error_count = error_count + 1;
         end
 
-        // Test Case 5: J-type immediate
-        #10 instruction = 32'b1111111111111111111_00000_1101111; // JAL instruction
-        imm_sel = 3'd4; // J-type
-        #10 if (imm !== {instruction[31], instruction[19:12], instruction[20], instruction[30:21], 1'b0}) begin
-            $error("J-type Test Failed: instruction=%b, imm_sel=%d, output=%b, expected=%b",
-                   instruction, imm_sel, imm, {instruction[31], instruction[19:12], instruction[20], instruction[30:21], 1'b0});
+        // Test Case 5: U-type (LUI)
+        instruction = {20'b10000000000000000000, 12'b0}; // imm=0x80000000
+        #10 if (imm !== 32'h80000000) begin
+            $error("Test Case 5 (U-type) Failed: instruction=%b, imm=%h, expected=0x80000000", instruction, imm);
             error_count = error_count + 1;
         end
 
-        // Final results
+        // Test Case 6: J-type
+        instruction = {1'b1, 10'b0000000101, 1'b0, 8'b00000011, 2'b01, 8'b10000001, 7'b1101111}; // imm=0x1234
+        #10 if (imm !== 32'h00001234) begin
+            $error("Test Case 6 (J-type) Failed: instruction=%b, imm=%h, expected=0x00001234", instruction, imm);
+            error_count = error_count + 1;
+        end
+
+        // Test Case 7: CSR Instruction (CSRRWI)
+        instruction = {7'b0, 5'b01010, 5'b00000, 3'b101, 5'b00000, 7'b1110011}; // imm=0x0A
+        #10 if (imm !== 32'h0000000A) begin
+            $error("Test Case 7 (CSR CSRRWI) Failed: instruction=%b, imm=%h, expected=0x0000000A", instruction, imm);
+            error_count = error_count + 1;
+        end
+
+        // Final Results
         if (error_count == 0) begin
             $display("All tests passed!");
         end else begin
