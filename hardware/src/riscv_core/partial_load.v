@@ -6,12 +6,14 @@ module partial_load (
     output reg [31:0] data_to_reg
 );
 
-    wire opcode, func3;
+    wire [6:0] opcode;
+    wire [2:0] func3;
     assign opcode = instruction[6:0];
     assign func3 = instruction[14:12];
 
     always @(*) begin
         if ((opcode == `OPC_LOAD)) begin
+        //if ((1 ==1)) begin
             case(func3)
                 `FNC_LB: begin
                     case(mem_addr[1:0])
