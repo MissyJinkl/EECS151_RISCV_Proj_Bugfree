@@ -1,4 +1,4 @@
-module reg (
+module reg32 (
     input [31:0] d,
     input clk,
     output [31:0] q

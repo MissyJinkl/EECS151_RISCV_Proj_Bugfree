@@ -15,8 +15,8 @@ module s3_control(
 
     wire [4:0] opcode5;
     wire [2:0] func3;
-    assign opcode5 = instruction[6:2];
-    assign func3 = instruction[14:12];
+    assign opcode5 = instruction_s3[6:2];
+    assign func3 = instruction_s3[14:12];
 
     always @(*) begin
         case(opcode5)
