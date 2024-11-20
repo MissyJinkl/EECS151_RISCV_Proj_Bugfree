@@ -7,7 +7,8 @@ module partial_store (
     output reg [3:0] mem_write_mask
 );
 
-    wire opcode, func3;
+    wire [6:0]opcode;
+    wire [2:0]func3;
     assign opcode = instruction[6:0];
     assign func3 = instruction[14:12];
 
