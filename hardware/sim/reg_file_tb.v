@@ -1,74 +1,97 @@
 `timescale 1ns/1ns
+`include "opcode.vh"
 
-module reg_file_tb();
-    // Signals for testing
-    reg clk;
-    reg we;
-    reg [4:0] ra1, ra2, wa;    // Read and write addresses
-    reg [31:0] wd;             // Write data
-    wire [31:0] rd1, rd2;      // Read data
-    integer error_count = 0;   // Error counter
+module partial_store_tb();
+    reg [31:0] instruction;     // Input instruction
+    reg [31:0] data_from_reg;   // Data to be written to memory
+    reg [31:0] mem_addr;        // Memory address
+    reg mem_wen;                // Memory write enable
+    wire [31:0] data_to_mem;    // Data written to memory
+    wire [3:0] mem_write_mask;  // Write mask for memory
+    integer error_count = 0;    // Error counter
 
-    // Instantiate the reg_file module
-    reg_file uut (
-        .clk(clk),
-        .we(we),
-        .ra1(ra1),
-        .ra2(ra2),
-        .wa(wa),
-        .wd(wd),
-        .rd1(rd1),
-        .rd2(rd2)
+    // Instantiate the partial_store module
+    partial_store uut (
+        .instruction(instruction),
+        .data_from_reg(data_from_reg),
+        .mem_addr(mem_addr),
+        .mem_wen(mem_wen),
+        .data_to_mem(data_to_mem),
+        .mem_write_mask(mem_write_mask)
     );
-
-    // Clock generation
-    initial clk = 0;
-    always #5 clk = ~clk; // 10ns clock period
 
     // Test procedure
     initial begin
         // Initialize signals
-        we = 0;
-        ra1 = 5'b0;
-        ra2 = 5'b0;
-        wa = 5'b0;
-        wd = 32'b0;
+        mem_wen = 1'b0; // Default memory write disabled
 
-        // Test Case 1: Write to register and read back
-        #10 wa = 5'd1; wd = 32'hDEADBEEF; we = 1; // Write 0xDEADBEEF to register 1
-        #10 we = 0; ra1 = 5'd1;                  // Read from register 1
-        #10 if (rd1 !== 32'hDEADBEEF) begin
-            $error("Test Case 1 Failed: wa=%d, wd=%h, rd1=%h, expected=%h", wa, wd, rd1, 32'hDEADBEEF);
+        // Test Case 1: Store Byte (SB), address aligned to byte 0 (0b00)
+        #10 instruction = {25'b0, 3'b000, 7'b0100011}; // SB instruction
+        mem_wen = 1'b1; // Enable write
+        data_from_reg = 32'b00010010001101000101011001111000; // Data: 0x12345678
+        mem_addr = 32'b00000000000000000000000000000000; // Address: aligned to byte 0
+        #10 if (data_to_mem !== 32'b00000000000000000000000001111000 || mem_write_mask !== 4'b0001) begin
+            $error("Test Case 1 (SB) Failed: data_to_mem=%b, mem_write_mask=%b", data_to_mem, mem_write_mask);
             error_count = error_count + 1;
         end
 
-        // Test Case 2: Write to register 2 and read from register 2
-        #10 wa = 5'd2; wd = 32'hCAFEBABE; we = 1; // Write 0xCAFEBABE to register 2
-        #10 we = 0; ra2 = 5'd2;                  // Read from register 2
-        #10 if (rd2 !== 32'hCAFEBABE) begin
-            $error("Test Case 2 Failed: wa=%d, wd=%h, rd2=%h, expected=%h", wa, wd, rd2, 32'hCAFEBABE);
+        // Test Case 2: Store Byte (SB), address aligned to byte 1 (0b01)
+        #10 mem_addr = 32'b00000000000000000000000000000001; // Address: aligned to byte 1
+        #10 if (data_to_mem !== 32'b00000000000000000000000000000000 || mem_write_mask !== 4'b0010) begin
+            $error("Test Case 2 (SB) Failed: data_to_mem=%b, mem_write_mask=%b", data_to_mem, mem_write_mask);
             error_count = error_count + 1;
         end
 
-        // Test Case 3: Attempt to write to register 0
-        #10 wa = 5'd0; wd = 32'h12345678; we = 1; // Attempt to write to register 0
-        #10 we = 0; ra1 = 5'd0;                  // Read from register 0
-        #10 if (rd1 !== 32'b0) begin
-            $error("Test Case 3 Failed: wa=%d, wd=%h, rd1=%h, expected=%h", wa, wd, rd1, 32'b0);
+        // Test Case 3: Store Byte (SB), address aligned to byte 2 (0b10)
+        #10 mem_addr = 32'b00000000000000000000000000000010; // Address: aligned to byte 2
+        #10 if (data_to_mem !== 32'b00000000000000000000000000000000 || mem_write_mask !== 4'b0100) begin
+            $error("Test Case 3 (SB) Failed: data_to_mem=%b, mem_write_mask=%b", data_to_mem, mem_write_mask);
             error_count = error_count + 1;
         end
 
-
-        // Test Case 4: Write to multiple registers and read back
-        #10 wa = 5'd5; wd = 32'hABCD1234; we = 1; // Write 0xABCD1234 to register 5
-        #10 wa = 5'd6; wd = 32'h56789ABC; we = 1; // Write 0x56789ABC to register 6
-        #10 we = 0; ra1 = 5'd5; ra2 = 5'd6;       // Read from registers 5 and 6
-        #10 if (rd1 !== 32'hABCD1234 || rd2 !== 32'h56789ABC) begin
-            $error("Test Case 4 Failed: rd1=%h, expected=%h; rd2=%h, expected=%h", rd1, 32'hABCD1234, rd2, 32'h56789ABC);
+        // Test Case 4: Store Byte (SB), address aligned to byte 3 (0b11)
+        #10 mem_addr = 32'b00000000000000000000000000000011; // Address: aligned to byte 3
+        #10 if (data_to_mem !== 32'b00000000000000000000000000000000 || mem_write_mask !== 4'b1000) begin
+            $error("Test Case 4 (SB) Failed: data_to_mem=%b, mem_write_mask=%b", data_to_mem, mem_write_mask);
             error_count = error_count + 1;
         end
 
-        // Final results
+        // Test Case 5: Store Halfword (SH), address aligned to halfword 0 (0b00)
+        #10 instruction = {25'b0, 3'b001, 7'b0100011}; // SH instruction
+        data_from_reg = 32'b00010010001101000101011001111000; // Data: 0x12345678
+        mem_addr = 32'b00000000000000000000000000000000; // Address: aligned to halfword 0
+        #10 if (data_to_mem !== 32'b00000000000000000101011001111000 || mem_write_mask !== 4'b0011) begin
+            $error("Test Case 5 (SH) Failed: data_to_mem=%b, mem_write_mask=%b", data_to_mem, mem_write_mask);
+            error_count = error_count + 1;
+        end
+
+        // Test Case 6: Store Halfword (SH), address aligned to halfword 1 (0b10)
+        #10 mem_addr = 32'b00000000000000000000000000000010; // Address: aligned to halfword 1
+        #10 if (data_to_mem !== 32'b00010010001101000101011001111000 || mem_write_mask !== 4'b1100) begin
+            $error("Test Case 6 (SH) Failed: data_to_mem=%b, mem_write_mask=%b", data_to_mem, mem_write_mask);
+            error_count = error_count + 1;
+        end
+
+        // Test Case 7: Store Word (SW)
+        #10 instruction = {25'b0, 3'b010, 7'b0100011}; // SW instruction
+        data_from_reg = 32'b10001001101010111100110111101111; // Data: 0x89ABCDEF
+        mem_addr = 32'b00000000000000000000000000000000; // Address: aligned to word
+        #10 if (data_to_mem !== 32'b10001001101010111100110111101111 || mem_write_mask !== 4'b1111) begin
+            $error("Test Case 7 (SW) Failed: data_to_mem=%b, mem_write_mask=%b", data_to_mem, mem_write_mask);
+            error_count = error_count + 1;
+        end
+
+        // Test Case 8: Write Enable Disabled
+        #10 mem_wen = 1'b0; // Disable write
+        instruction = {25'b0, 3'b010, 7'b0100011}; // SW instruction
+        data_from_reg = 32'b00000000000000000000000000000000; // Data: 0x0
+        mem_addr = 32'b00000000000000000000000000000000; // Address: aligned
+        #10 if (data_to_mem !== data_from_reg || mem_write_mask !== 4'b0000) begin
+            $error("Test Case 8 (Write Disabled) Failed: data_to_mem=%b, mem_write_mask=%b", data_to_mem, mem_write_mask);
+            error_count = error_count + 1;
+        end
+
+        // Final Results
         if (error_count == 0) begin
             $display("All tests passed!");
         end else begin

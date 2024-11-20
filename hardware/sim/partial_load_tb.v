@@ -71,7 +71,7 @@ module partial_load_tb();
         // Test Case 6: Load Halfword Unsigned (LHU)
         #100 instruction = {20'b0, `FNC_LHU,  5'b0,`OPC_LOAD}; // Opcode for LOAD with FNC_LHU
         #50 data_from_mem = 32'b10001001101010111100110111101111; // Binary for 0x89ABCDEF
-        mem_addr = 32'b00000000000000000000000000000001; // Address (selects second halfword)
+        mem_addr = 32'b00000000000000000000000000000010; // Address (selects second halfword)
         #50 if (data_to_reg !== {16'b0, data_from_mem[31:16]}) begin
             $error("Test Case 6 (LHU) Failed: instruction=%b, opcode=%b, funct3=%b, mem_addr=%b, data_to_reg=%b, expected=%b",
                    instruction, instruction[6:0], instruction[14:12], mem_addr, data_to_reg, {16'b0, data_from_mem[31:16]});

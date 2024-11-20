@@ -13,6 +13,7 @@ module partial_load (
     assign func3 = instruction[14:12];
 
     always @(*) begin
+        data_to_reg = 32'b0;
         if ((opcode == `OPC_LOAD)) begin
             case(func3)
                 // Load Byte (LB): 符号扩展
