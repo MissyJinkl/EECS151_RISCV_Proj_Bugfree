@@ -17,7 +17,7 @@ module cpu #(
     bios_mem bios_mem (
       .clk(clk),
       .ena(1'b1), //modify this?
-      .addra(pc_d),
+      .addra(pc_d[11:0]),
       .douta(bios_douta),
       .enb(bios_enb),
       .addrb(bios_addrb),
@@ -55,23 +55,23 @@ module cpu #(
       .wea(imem_wea),
       .addra(imem_addra),
       .dina(imem_dina),
-      .addrb(imem_addrb),
+      .addrb(pc_d[13:0]),
       .doutb(imem_doutb)
     );
 
     // Register file
     // Asynchronous read: read data is available in the same cycle
     // Synchronous write: write takes one cycle
-    wire we;
+    wire reg_wen;
     wire [4:0] ra1, ra2, wa;
-    wire [31:0] wd;
-    wire [31:0] rd1, rd2;
+    wire [31:0] wb;
+    wire [31:0] reg_rd1_s1, reg_rd2_s1;
     reg_file rf (
         .clk(clk),
-        .we(we),
-        .ra1(ra1), .ra2(ra2), .wa(wa),
-        .wd(wd),
-        .rd1(rd1), .rd2(rd2)
+        .we(reg_wen),
+        .ra1(instruction_s1[19:15]), .ra2(instruction_s1[24:20]), .wa(instruction_s1[11:7]),
+        .wd(wb),
+        .rd1(reg_rd1_s1), .rd2(reg_rd2_s1)
     );
 
     // On-chip UART
@@ -131,6 +131,7 @@ module cpu #(
     );
 
     // pc_register
+    wire [31:0] pc_q;
     reg32 pc_register (
       .clk(clk),
       .d(pc_d),
@@ -161,7 +162,38 @@ module cpu #(
       .out(pc_0_4)
     );
 
-    // 
-    bios_douta
+    // pc30_mux and nop_mux
+    wire [31:0] ins_mem; //instruction from memory, selected by pc[30]
+    mux2to1 pc30_mux (
+      .in0(imem_doutb),
+      .in1(bios_douta),
+      .sel(pc_q[30]),
+      .out(ins_mem)
+    );
+    mux2to1 nop_mux(
+      .in0(ins_mem),
+      .in1(32'h00000033),
+      .sel(nop_control),
+      .out(instruction_s1)
+    );
 
+    // immediate generater
+
+    // pipeline registers between stage1 and stage2
+    wire [31:0] reg_rd1_s2, reg_rd2_s2, pc_s2;
+    reg32 pip_reg_s12_2 (
+      .clk(clk),
+      .d(reg_rd1_s1),
+      .q(reg_rd1_s2)
+    );
+    reg32 pip_reg_s12_3 (
+      .clk(clk),
+      .d(reg_rd2_s1),
+      .q(reg_rd2_s2)
+    );
+    reg32 pip_reg_s12_1 (
+      .clk(clk),
+      .d(pc_q),
+      .q(pc_s2)
+    );
 endmodule
