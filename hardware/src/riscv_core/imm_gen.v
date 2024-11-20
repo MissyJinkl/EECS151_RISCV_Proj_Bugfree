@@ -1,3 +1,4 @@
+`include "opcode.vh"
 module imm_gen(
     input [31:0] instruction,
     output reg [31:0] imm

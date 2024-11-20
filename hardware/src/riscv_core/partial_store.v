@@ -4,7 +4,7 @@ module partial_store (
     input [31:0] mem_addr,
     input mem_wen,
     output reg [31:0] data_to_mem,
-    output reg [3:0] mem_write_mask,
+    output reg [3:0] mem_write_mask
 );
 
     wire opcode, func3;

@@ -5,7 +5,7 @@ module decoder(
     output [2:0] func3,
     output [4:0] rs1,
     output [4:0] rs2,
-    output [6:0] func7,
+    output [6:0] func7
 );
     assign opcode = instruction[6:0];
     assign rd = instruction[11:7];
