@@ -34,10 +34,10 @@ module cpu #(
     wire dmem_en;
     dmem dmem (
       .clk(clk),
-      .en(dmem_en),
-      .we(dmem_we),
-      .addr(dmem_addr),
-      .din(dmem_din),
+      .en(mem_ena),
+      .we(wea),
+      .addr(alu_result),
+      .din(data_to_mem),
       .dout(dmem_dout)
     );
 
@@ -110,12 +110,12 @@ module cpu #(
     /* stage1: IFD */
 
     // pc_sel mux
-    wire [31:0] pc_0_4, alu_1, pc_jal, pc_reset, pc_d;
+    wire [31:0] pc_0_4, alu_result, pc_jal, pc_reset, pc_d;
     wire [1:0] pc_sel;
     assign pc_reset = RESET_PC;
     mux4to1 pc_sel_mux (
       .in0(pc_0_4),
-      .in1(alu_1),
+      .in1(alu_result),
       .in2(pc_jal),
       .in3(pc_reset),
       .sel(pc_sel),
@@ -207,6 +207,12 @@ module cpu #(
       .q(imm_s2)
     );
 
+    // stage 1 control unit
+    s1_control s1_CU(
+      .instruction_s1(instruction_s1),
+      .pc(pc_q),
+      .nop_control(nop_control)
+    );
 
     /* stage2: EX */
 
@@ -243,6 +249,107 @@ module cpu #(
       .alu_sel(alu_sel)
     );
 
-    // ALU a mux
+    // ALU A mux and B mux
+    wire [31:0] alu_ina, alu_inb;
+    mux2to1 alu_a_mux(
+      .in0(reg_rd1_s2),
+      .in1(pc_s2),
+      .sel(a_sel),
+      .out(alu_ina)
+    );
+    mux2to1 alu_b_mux(
+      .in0(reg_rd2_s2),
+      .in1(imm_s2),
+      .sel(b_sel),
+      .out(alu_inb)
+    );
+
+    // ALU
+    alu alu_ins(
+      .A(alu_ina),
+      .B(alu_inb),
+      .alu_sel(alu_sel),
+      .alu_result(alu_result)
+    );
+
+    //partial_store
+    wire [31:0] data_to_mem;
+    wire [3:0] wea;
+    wire mem_wen;
+    partial_store partial_store_ins(
+      .instruction(instruction_s2),
+      .data_from_reg(reg_rd2_s2),
+      .mem_addr(alu_result),
+      .mem_wen(mem_wen),
+      .data_to_mem(data_to_mem),
+      .mem_write_mask(wea)
+    );
+
+    // pipeline registers between stage2 and stage3
+    wire [31:0] alu_result_q, pc_s3;
+    reg32 pip_reg_s23_1 (
+      .clk(clk),
+      .d(alu_result),
+      .q(alu_result_q)
+    );
+    reg32 pip_reg_s23_2 (
+      .clk(clk),
+      .d(pc_s2),
+      .q(pc_s3)
+    );
+
+
+    /* stage3: MEM & WB */
+
+    // memory select mux
+    wire [2:0] mem_sel;
+    wire [31:0] data_from_mem;
+    mux5to1 mem_sel_mux(
+      .in0(0),                // modify these zeros
+      .in1(dmem_dout),
+      .in2(0),
+      .in3(0),
+      .in4(0),
+      .sel(mem_sel),
+      .out(data_from_mem)
+    );
     
+    // partial load
+    wire [31:0] data_to_reg;
+    partial_load partial_load_ins(
+      .instruction(instruction_s3),
+      .data_from_mem(data_from_mem),
+      .mem_addr(alu_result_q),
+      .data_to_reg(data_to_reg)
+    );
+
+    // pc + 4 
+    wire [31:0] pc_add4_s3;
+    adder adder_pc_4(
+      .in0(pc_s3),
+      .in1(32'd4),
+      .out(pc_add4_s3)
+    );
+    
+    // wb select mux
+    mux3to1 wb_sel_mux(
+      .in0(data_to_reg),
+      .in1(alu_result_q),
+      .in2(pc_add4_s3),
+      .sel(wb_sel),
+      .out(wb)
+    );
+
+    // stage 3 control unit
+    s3_control s3_CU(
+      .instruction_s3(instruction_s3),
+      .rst(rst),
+      .breq(breq),
+      .brlt(brlt),
+      .mem_sel(mem_sel),
+      .wb_sel(wb_sel),
+      .pc_sel(pc_sel),
+      .reg_we(reg_wen)
+    );
+
 endmodule
