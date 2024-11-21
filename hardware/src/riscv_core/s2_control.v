@@ -1,6 +1,5 @@
 module s2_control(
     input [31:0] instruction_s2,
-    //input breq, brlt,
     //output [1:0] rs1_sel, rs2_sel,
     output brun, a_sel, b_sel, mem_wen, csr_we,
     output reg [3:0] alu_sel

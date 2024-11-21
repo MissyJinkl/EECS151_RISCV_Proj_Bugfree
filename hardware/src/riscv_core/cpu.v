@@ -154,7 +154,7 @@ module cpu #(
 
     // 0/4 mux and adder
     wire nop_control;
-    assign nop_control = (instruction_s2[6:2] == 5'b11001) ? 1 : 0; // if ins2 is jalr
+    assign nop_control = ((instruction_s2[6:2] == 5'b11001) || (instruction_s2[6:2] == 5'b11000)) ? 1 : 0; // if ins2 is jalr or branch
     wire [31:0] zero_or_4;
     mux2to1 zero_or_4_mux (
       .in0(32'd4),

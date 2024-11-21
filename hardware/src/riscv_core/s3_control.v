@@ -7,20 +7,25 @@ module s3_control(
 );
     wire [4:0] opcode5;
     wire [2:0] func3;
+    wire [4:0] opcode5_s2;
+    wire [2:0] func3_s2;
     assign opcode5 = instruction_s3[6:2];
     assign func3 = instruction_s3[14:12];
+    assign opcode5_s2 = instruction_s2[6:2];
+    assign func3_s2 = instruction_s2[14:12];
 
     always @(*) begin
         if (rst) pc_sel = 2'd3;
         else if (is_jal) pc_sel = 2'd2;
-        else if (instruction_s2[6:2] == `OPC_JALR_5) pc_sel = 2'd1; // if is jalr
-        else if (opcode5 == `OPC_BRANCH_5) begin
-            if ((func3 == `FNC_BEQ) && breq) pc_sel = 2'd1;
-            if ((func3 == `FNC_BNE) && !breq) pc_sel = 2'd1;
-            if ((func3 == `FNC_BLT) && brlt) pc_sel = 2'd1;
-            if ((func3 == `FNC_BGE) && !brlt) pc_sel = 2'd1;
-            if ((func3 == `FNC_BLTU) && brlt) pc_sel = 2'd1;
-            if ((func3 == `FNC_BGEU) && !brlt) pc_sel = 2'd1;
+        else if (opcode5_s2 == `OPC_JALR_5) pc_sel = 2'd1; // if is jalr
+        else if (opcode5_s2 == `OPC_BRANCH_5) begin
+            if ((func3_s2 == `FNC_BEQ) && breq) pc_sel = 2'd1;
+            else if ((func3_s2 == `FNC_BNE) && !breq) pc_sel = 2'd1;
+            else if ((func3_s2 == `FNC_BLT) && brlt) pc_sel = 2'd1;
+            else if ((func3_s2 == `FNC_BGE) && !brlt) pc_sel = 2'd1;
+            else if ((func3_s2 == `FNC_BLTU) && brlt) pc_sel = 2'd1;
+            else if ((func3_s2 == `FNC_BGEU) && !brlt) pc_sel = 2'd1;
+            else pc_sel = 2'd0;
         end
         else pc_sel = 2'd0;
     end
