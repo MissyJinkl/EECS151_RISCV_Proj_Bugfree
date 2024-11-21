@@ -154,6 +154,7 @@ module cpu #(
 
     // 0/4 mux and adder
     wire nop_control;
+    assign nop_control = (instruction_s2[6:2] == 5'b11001) ? 1 : 0; // if ins2 is jalr
     wire [31:0] zero_or_4;
     mux2to1 zero_or_4_mux (
       .in0(32'd4),
@@ -212,12 +213,12 @@ module cpu #(
       .q(imm_s2)
     );
 
-    // stage 1 control unit
+    /*// stage 1 control unit
     s1_control s1_CU(
       .instruction_s1(instruction_s1),
       .pc(pc_q),
       .nop_control(nop_control)
-    );
+    );*/
 
     /* stage2: EX */
 
@@ -362,6 +363,6 @@ module cpu #(
       .pc_sel(pc_sel),
       .reg_we(reg_wen)
     );
-    assign is_jal = (instruction_s1[6:2] == 5'b11011) ? 1 : 0;
+    assign is_jal = (instruction_s1[6:2] == 5'b11011) ? 1 : 0; // if ins1 is jal
 
 endmodule
