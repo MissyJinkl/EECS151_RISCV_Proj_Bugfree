@@ -339,6 +339,7 @@ module cpu #(
     );
     
     // wb select mux
+    wire [1:0] wb_sel;
     mux3to1 wb_sel_mux(
       .in0(data_to_reg),
       .in1(alu_result_q),

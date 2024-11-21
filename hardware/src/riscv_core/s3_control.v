@@ -42,12 +42,12 @@ module s3_control(
             end
             `OPC_JAL_5: begin
                 mem_sel = 3'd0;
-                wb_sel = 2'd1;
+                wb_sel = 2'd2;
                 reg_we = 1'b1;
             end
             `OPC_JALR_5: begin
                 mem_sel = 3'd0;
-                wb_sel = 2'd1;
+                wb_sel = 2'd2;
                 reg_we = 1'b1;
             end
             `OPC_BRANCH_5: begin
