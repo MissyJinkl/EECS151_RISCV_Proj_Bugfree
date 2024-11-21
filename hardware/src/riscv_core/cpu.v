@@ -121,8 +121,8 @@ module cpu #(
       .sel(pc_sel),
       .out(pc_d)
     );
-    assign bios_addra = pc_d[11:0];
-    assign imem_addrb = pc_d[13:0];
+    assign bios_addra = pc_d[13:2];
+    assign imem_addrb = pc_d[15:2];
 
     // instuction reg between stage 1, 2
     wire [31:0] instruction_s1, instruction_s2;
@@ -276,7 +276,7 @@ module cpu #(
       .alu_sel(alu_sel),
       .alu_result(alu_result)
     );
-    assgin dmem_addr = alu_result[13:0];
+    assign dmem_addr = alu_result[15:2];
 
     //partial_store
     wire [31:0] data_to_mem;
