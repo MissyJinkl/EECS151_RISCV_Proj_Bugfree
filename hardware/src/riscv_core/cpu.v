@@ -66,6 +66,7 @@ module cpu #(
     wire [4:0] ra1, ra2, wa;
     wire [31:0] wb;
     wire [31:0] reg_rd1_s1, reg_rd2_s1;
+    wire [31:0] instruction_s1, instruction_s2;
     reg_file rf (
         .clk(clk),
         .we(reg_wen),
@@ -123,7 +124,7 @@ module cpu #(
     );
 
     // instuction reg between stage 1, 2
-    wire [31:0] instruction_s1, instruction_s2;
+    
     reg32 ins_reg_12 (
       .clk(clk),
       .d(instruction_s1),
