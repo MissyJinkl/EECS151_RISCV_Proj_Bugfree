@@ -82,7 +82,7 @@ module s3_control(
             5'b11100: begin
                 mem_sel = 3'd1;
                 wb_sel = 2'd1;
-                reg_we = 1'b1;
+                reg_we = 1'b0;
             end
         endcase
     end

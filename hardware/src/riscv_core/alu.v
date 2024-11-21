@@ -22,8 +22,8 @@ always @* begin
         4'd6: alu_result = A | B;
         // and
         4'd7: alu_result = A & B;
-        // mul
-        //4'd8: alu_result = $signed(A) * $signed(B);
+        // asel
+        4'd8: alu_result = A;
         // mulh
         //4'd9: alu_result = ($signed(A) * $signed(B)) >> 32;
         // sltu

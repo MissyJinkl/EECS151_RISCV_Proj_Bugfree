@@ -101,7 +101,7 @@ module cpu #(
         .data_in_ready(uart_tx_data_in_ready)
     );
 
-    reg [31:0] tohost_csr = 0;
+    wire [31:0] tohost_csr;
 
     // TODO: Your code to implement a fully functioning RISC-V core
     // Add as many modules as you want
@@ -347,6 +347,14 @@ module cpu #(
       .in2(pc_add4_s3),
       .sel(wb_sel),
       .out(wb)
+    );
+
+    // csr register
+    reg32_with_enable csr_reg(
+      .clk(clk),
+      .d(alu_result),
+      .en(csr_we),
+      .q(tohost_csr)
     );
 
     // stage 3 control unit
