@@ -125,7 +125,7 @@ module cpu #(
     assign imem_addrb = pc_d[15:2];
 
     // instuction reg between stage 1, 2
-    wire [31:0] instruction_s1, instruction_s2;
+    wire [31:0] instruction_s1, instruction_s2, instruction_s3;
     reg32 ins_reg_12 (
       .clk(clk),
       .d(instruction_s1),
@@ -133,7 +133,7 @@ module cpu #(
     );
     assign ra1 = instruction_s1[19:15];
     assign ra2 = instruction_s1[24:20];
-    assign wa = instruction_s1[11:7];
+    assign wa = instruction_s3[11:7];
 
     // pc_register
     wire [31:0] pc_q;
@@ -222,7 +222,6 @@ module cpu #(
     /* stage2: EX */
 
     // instuction reg between stage 2, 3
-    wire [31:0] instruction_s3;
     reg32 ins_reg_23 (
       .clk(clk),
       .d(instruction_s2),
