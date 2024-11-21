@@ -41,7 +41,7 @@ module s2_control(
             end
             `OPC_ARI_ITYPE: begin
                 case(func3)
-                    `FNC_ADD_SUB: alu_sel = instruction_s2[30] ? 4'd12 : 4'd0;
+                    `FNC_ADD_SUB: alu_sel = 4'd0;
                     `FNC_SLL: alu_sel = 4'd1;
                     `FNC_SLT: alu_sel = 4'd2;
                     `FNC_SLTU: alu_sel = 4'd11;
