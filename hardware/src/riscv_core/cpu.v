@@ -313,7 +313,7 @@ module cpu #(
     wire [2:0] mem_sel;
     wire [31:0] data_from_mem;
     mux5to1 mem_sel_mux(
-      .in0(0),                // modify these zeros
+      .in0(bios_doutb),                // modify these zeros
       .in1(dmem_dout),
       .in2(0),
       .in3(0),
@@ -362,6 +362,7 @@ module cpu #(
     s3_control s3_CU(
       .instruction_s3(instruction_s3),
       .instruction_s2(instruction_s2),
+      .addr(alu_result_q),
       .rst(rst),
       .breq(breq),
       .brlt(brlt),

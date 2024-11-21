@@ -1,5 +1,6 @@
 module s3_control(
     input [31:0] instruction_s3, instruction_s2,
+    input [31:0] addr,
     input rst, breq, brlt, is_jal,
     output reg [2:0] mem_sel,
     output reg [1:0] wb_sel, pc_sel,
@@ -35,47 +36,47 @@ module s3_control(
     always @(*) begin
         case(opcode5)
             `OPC_LUI_5: begin
-                mem_sel = 3'd0;
+                //mem_sel = 3'd0;
                 wb_sel = 2'd1;
                 reg_we = 1'b1;
             end
             `OPC_AUIPC_5: begin
-                mem_sel = 3'd0;
+                //mem_sel = 3'd0;
                 wb_sel = 2'd1;
                 reg_we = 1'b1;
             end
             `OPC_JAL_5: begin
-                mem_sel = 3'd0;
+                //mem_sel = 3'd0;
                 wb_sel = 2'd2;
                 reg_we = 1'b1;
             end
             `OPC_JALR_5: begin
-                mem_sel = 3'd0;
+                //mem_sel = 3'd0;
                 wb_sel = 2'd2;
                 reg_we = 1'b1;
             end
             `OPC_BRANCH_5: begin
-                mem_sel = 3'd0;
+                //mem_sel = 3'd0;
                 wb_sel = 2'd0;
                 reg_we = 1'b0;
             end
             `OPC_STORE_5: begin
-                mem_sel = 3'd0;
+                //mem_sel = 3'd0;
                 wb_sel = 2'd0;
                 reg_we = 1'b0;
             end
             `OPC_LOAD_5: begin
-                mem_sel = 3'd1;
+                //mem_sel = 3'd1;
                 wb_sel = 2'd0;
                 reg_we = 1'b1;
             end
             `OPC_ARI_RTYPE_5: begin
-                mem_sel = 3'd0;
+                //mem_sel = 3'd0;
                 wb_sel = 2'd1;
                 reg_we = 1'b1;
             end
             `OPC_ARI_ITYPE_5: begin
-                mem_sel = 3'd0;
+                //mem_sel = 3'd0;
                 wb_sel = 2'd1;
                 reg_we = 1'b1;
             end
@@ -84,6 +85,10 @@ module s3_control(
                 wb_sel = 2'd1;
                 reg_we = 1'b0;
             end
+        endcase
+    case(addr[31:30])
+        2'b00: mem_sel = 1'd1; //choose dmem
+        2'b01: mem_sel = 1'd0; //choode biosmem
         endcase
     end
 
