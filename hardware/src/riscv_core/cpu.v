@@ -17,7 +17,7 @@ module cpu #(
     bios_mem bios_mem (
       .clk(clk),
       .ena(1'b1), //modify this?
-      .addra(pc_d[11:0]),
+      .addra(bios_addra), 
       .douta(bios_douta),
       .enb(bios_enb),
       .addrb(bios_addrb),
@@ -34,10 +34,10 @@ module cpu #(
     wire dmem_en;
     dmem dmem (
       .clk(clk),
-      .en(mem_ena),
-      .we(wea),
-      .addr(alu_result),
-      .din(data_to_mem),
+      .en(1'b1), 
+      .we(dmem_we), 
+      .addr(dmem_addr), 
+      .din(dmem_din),
       .dout(dmem_dout)
     );
 
@@ -55,7 +55,7 @@ module cpu #(
       .wea(imem_wea),
       .addra(imem_addra),
       .dina(imem_dina),
-      .addrb(pc_d[13:0]),
+      .addrb(imem_addrb),
       .doutb(imem_doutb)
     );
 
@@ -66,11 +66,10 @@ module cpu #(
     wire [4:0] ra1, ra2, wa;
     wire [31:0] wb;
     wire [31:0] reg_rd1_s1, reg_rd2_s1;
-    wire [31:0] instruction_s1, instruction_s2;
     reg_file rf (
         .clk(clk),
         .we(reg_wen),
-        .ra1(instruction_s1[19:15]), .ra2(instruction_s1[24:20]), .wa(instruction_s1[11:7]),
+        .ra1(ra1), .ra2(ra2), .wa(wa),
         .wd(wb),
         .rd1(reg_rd1_s1), .rd2(reg_rd2_s1)
     );
@@ -122,14 +121,19 @@ module cpu #(
       .sel(pc_sel),
       .out(pc_d)
     );
+    assign bios_addra = pc_d[11:0];
+    assign imem_addrb = pc_d[13:0];
 
     // instuction reg between stage 1, 2
-    
+    wire [31:0] instruction_s1, instruction_s2;
     reg32 ins_reg_12 (
       .clk(clk),
       .d(instruction_s1),
       .q(instruction_s2)
     );
+    assign ra1 = instruction_s1[19:15];
+    assign ra2 = instruction_s1[24:20];
+    assign wa = instruction_s1[11:7];
 
     // pc_register
     wire [31:0] pc_q;
@@ -272,6 +276,7 @@ module cpu #(
       .alu_sel(alu_sel),
       .alu_result(alu_result)
     );
+    assgin dmem_addr = alu_result[13:0];
 
     //partial_store
     wire [31:0] data_to_mem;
@@ -285,6 +290,8 @@ module cpu #(
       .data_to_mem(data_to_mem),
       .mem_write_mask(wea)
     );
+    assign dmem_we = wea;
+    assign dmem_din = data_to_mem;
 
     // pipeline registers between stage2 and stage3
     wire [31:0] alu_result_q, pc_s3;
