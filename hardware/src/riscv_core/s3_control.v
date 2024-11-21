@@ -1,22 +1,32 @@
 module s3_control(
     input [31:0] instruction_s3,
-    input rst,
+    input rst, breq, brlt,
     output reg [2:0] mem_sel,
     output reg [1:0] wb_sel, pc_sel,
     output reg reg_we
 );
-    always @(*) begin
-        if (rst) pc_sel = 2'd3;
-        //else if (jal) pc_sel = 2'b2;
-        //else if (jalr) pc_sel = 2'b1;
-        //else if (!br_pred_correct && (instruction_s3[6:2] == `OPC_BRANCH_5)) pc_sel = 2'b1;
-        else pc_sel = 0;
-    end
-
     wire [4:0] opcode5;
     wire [2:0] func3;
     assign opcode5 = instruction_s3[6:2];
     assign func3 = instruction_s3[14:12];
+
+    always @(*) begin
+        if (rst) pc_sel = 2'd3;
+        else if (opcode5 == `OPC_JAL_5) pc_sel = 2'd1;
+        else of (opcode5 == `OPC_JALR_5) pc_sel = 2'd1;
+        // we are not using jal forwarding now, modify later
+        else if (opcode5 == `OPC_BRANCH_5) begin
+            if ((func3 == `FNC_BEQ) && breq) pc_sel = 2'd1;
+            if ((func3 == `FNC_BNE) && !breq) pc_sel = 2'd1;
+            if ((func3 == `FNC_BLT) && brlt) pc_sel = 2'd1;
+            if ((func3 == `FNC_BGE) && !brlt) pc_sel = 2'd1;
+            if ((func3 == `FNC_BLTU) && brlt) pc_sel = 2'd1;
+            if ((func3 == `FNC_BGEU) && !brlt) pc_sel = 2'd1;
+        end
+        else pc_sel = 2'd0;
+    end
+
+    
 
     always @(*) begin
         case(opcode5)

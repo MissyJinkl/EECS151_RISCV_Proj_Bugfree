@@ -178,6 +178,11 @@ module cpu #(
     );
 
     // immediate generater
+    wire [31:0] imm_s1, imm_s2;
+    imm_gen imm_gen_ins (
+      .instruction(instruction_s1),
+      .imm(imm_s1)
+    );
 
     // pipeline registers between stage1 and stage2
     wire [31:0] reg_rd1_s2, reg_rd2_s2, pc_s2;
@@ -196,4 +201,48 @@ module cpu #(
       .d(pc_q),
       .q(pc_s2)
     );
+    reg32 pip_reg_s12_4 (
+      .clk(clk),
+      .d(imm_s1),
+      .q(imm_s2)
+    );
+
+
+    /* stage2: EX */
+
+    // instuction reg between stage 2, 3
+    wire [31:0] instruction_s3;
+    reg32 ins_reg_23 (
+      .clk(clk),
+      .d(instruction_s2),
+      .q(instruction_s3)
+    );
+
+    // branch comparator
+    wire brun, breq, brlt;
+    branch_com branch_com_ins (
+      .brdata1(reg_rd1_s2),
+      .brdata2(reg_rd2_s2),
+      .brun(brun),
+      .breq(breq),
+      .brlt(brlt)
+    );
+
+    // stage 2 control unit
+    wire a_sel, b_sel, mem_wen, csr_we;
+    wire [3:0] alu_sel;
+    s2_control s2_CU (
+      .instruction_s2(instruction_s2),
+      //.rs1_sel(), 
+      //.rs2_sel(),
+      .brun(brun),
+      .a_sel(a_sel),
+      .b_sel(b_sel),
+      .mem_wen(mem_wen),
+      .csr_we(csr_we),
+      .alu_sel(alu_sel)
+    );
+
+    // ALU a mux
+    
 endmodule
