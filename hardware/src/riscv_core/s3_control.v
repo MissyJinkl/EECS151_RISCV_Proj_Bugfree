@@ -13,7 +13,7 @@ module s3_control(
     always @(*) begin
         if (rst) pc_sel = 2'd3;
         else if (opcode5 == `OPC_JAL_5) pc_sel = 2'd1;
-        else of (opcode5 == `OPC_JALR_5) pc_sel = 2'd1;
+        else if (opcode5 == `OPC_JALR_5) pc_sel = 2'd1;
         // we are not using jal forwarding now, modify later
         else if (opcode5 == `OPC_BRANCH_5) begin
             if ((func3 == `FNC_BEQ) && breq) pc_sel = 2'd1;

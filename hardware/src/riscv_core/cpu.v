@@ -226,7 +226,7 @@ module cpu #(
 
     // branch comparator
     wire brun, breq, brlt;
-    branch_com branch_com_ins (
+    branch_comp branch_com_ins (
       .brdata1(reg_rd1_s2),
       .brdata2(reg_rd2_s2),
       .brun(brun),
