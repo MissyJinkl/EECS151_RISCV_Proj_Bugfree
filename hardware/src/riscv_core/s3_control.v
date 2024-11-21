@@ -1,5 +1,5 @@
 module s3_control(
-    input [31:0] instruction_s3,
+    input [31:0] instruction_s3, instruction_s2,
     input rst, breq, brlt, is_jal,
     output reg [2:0] mem_sel,
     output reg [1:0] wb_sel, pc_sel,
@@ -13,8 +13,7 @@ module s3_control(
     always @(*) begin
         if (rst) pc_sel = 2'd3;
         else if (is_jal) pc_sel = 2'd2;
-        else if (opcode5 == `OPC_JALR_5) pc_sel = 2'd1;
-        // we are not using jal forwarding now, modify later
+        else if (instruction_s2[6:2] == `OPC_JALR_5) pc_sel = 2'd1; // if is jalr
         else if (opcode5 == `OPC_BRANCH_5) begin
             if ((func3 == `FNC_BEQ) && breq) pc_sel = 2'd1;
             if ((func3 == `FNC_BNE) && !breq) pc_sel = 2'd1;

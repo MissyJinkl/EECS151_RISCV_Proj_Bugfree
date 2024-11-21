@@ -352,6 +352,7 @@ module cpu #(
     wire is_jal;
     s3_control s3_CU(
       .instruction_s3(instruction_s3),
+      .instruction_s2(instruction_s2),
       .rst(rst),
       .breq(breq),
       .brlt(brlt),
@@ -361,6 +362,6 @@ module cpu #(
       .pc_sel(pc_sel),
       .reg_we(reg_wen)
     );
-    assign is_jal = (instruction_s1[6:2] == 5'b11001) ? 1 : 0;
+    assign is_jal = (instruction_s1[6:2] == 5'b11011) ? 1 : 0;
 
 endmodule
