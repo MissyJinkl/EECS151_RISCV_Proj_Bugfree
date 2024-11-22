@@ -90,11 +90,11 @@ module s2_control(
         end
     end else if (opcode_s3 == `OPC_LOAD) begin
         if (opcode == `OPC_ARI_RTYPE || opcode == `OPC_STORE || opcode == `OPC_BRANCH) begin
-            forward_sel_1 = (rs1_2 == rd_3) ? 2'b01 : 2'b10;
-            forward_sel_2 = (rs2_2 == rd_3) ? 2'b01 : 2'b10;
+            forward_sel_1 = (rs1_2 == rd_3 && rd_3 != 0) ? 2'b01 : 2'b10;
+            forward_sel_2 = (rs2_2 == rd_3 && rd_3 != 0) ? 2'b01 : 2'b10;
         end
         else if (opcode == `OPC_ARI_ITYPE || opcode == `OPC_LOAD || opcode == `OPC_JALR || opcode == `OPC_CSR) begin
-            forward_sel_1 = (rs1_2 == rd_3) ? 2'b01 : 2'b10;
+            forward_sel_1 = (rs1_2 == rd_3 && rd_3 != 0) ? 2'b01 : 2'b10;
             forward_sel_2 = 2'b10;
         end
         else begin

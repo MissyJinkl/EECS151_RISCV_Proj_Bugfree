@@ -4,6 +4,7 @@ module imm_gen(
     output reg [31:0] imm
 );
     always @(*) begin
+        imm = 32'b0; 
         case(instruction[6:2])
             // I-type
             `OPC_JALR_5: imm = {{21{instruction[31]}}, instruction[30:20]};
@@ -31,7 +32,9 @@ module imm_gen(
             5'b11100: begin
                 if (instruction[14:12] == 3'b101) imm = {{27{1'b0}}, instruction[19:15]}; //csrrwi, alu = 4'd15
                 else if (instruction[14:12] == 3'b001) imm = 32'b0; //csrrw, alu = 4'd0
+                else imm = 32'b0;
             end
+            default: imm = 32'b0;
 
         endcase
     end
