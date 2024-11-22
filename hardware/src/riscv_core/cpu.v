@@ -279,6 +279,7 @@ module cpu #(
     assign dmem_addr = alu_result[15:2];
     assign imem_addra = alu_result[15:2];
     assign bios_addrb = alu_result[13:2];
+    assign uart_tx_data_in_valid = ((alu_result == 32'h80000008) && (instruction_s2[6:2] == `OPC_STORE_5));
 
     //partial_store
     wire [31:0] data_to_mem;
@@ -309,7 +310,6 @@ module cpu #(
       .d(pc_s2),
       .q(pc_s3)
     );
-
 
     /* stage3: MEM & WB */
 
@@ -361,23 +361,6 @@ module cpu #(
       .q(tohost_csr)
     );
 
-    // stage 3 control unit
-    wire is_jal;
-    s3_control s3_CU(
-      .instruction_s3(instruction_s3),
-      .instruction_s2(instruction_s2),
-      .addr(alu_result_q),
-      .rst(rst),
-      .breq(breq),
-      .brlt(brlt),
-      .mem_sel(mem_sel),
-      .is_jal(is_jal),
-      .wb_sel(wb_sel),
-      .pc_sel(pc_sel),
-      .reg_we(reg_wen)
-    );
-    assign is_jal = (instruction_s1[6:2] == 5'b11011) ? 1 : 0; // if ins1 is jal
-
     // Cycle Counter
     wire [31:0] cyc_counter_d;
     wire [31:0] cyc_counter_q;
@@ -396,5 +379,28 @@ module cpu #(
                .ce(~nop_control),
                .clk(clk));
     assign instr_counter_d = instr_counter_q + 1;
+
+     // stage 3 control unit
+    wire is_jal;
+    s3_control s3_CU(
+      .instruction_s3(instruction_s3),
+      .instruction_s2(instruction_s2),
+      .addr(alu_result_q),
+      .rst(rst),
+      .breq(breq),
+      .brlt(brlt),
+      .uart_rx_valid(uart_rx_valid),
+      .uart_tx_ready(uart_tx_ready),
+      .uart_rx_out(uart_rx_out),
+      .cyc_counter(cyc_counter_d),
+      .instr_counter(instr_counter_d),
+      .mem_sel(mem_sel),
+      .is_jal(is_jal),
+      .wb_sel(wb_sel),
+      .pc_sel(pc_sel),
+      .reg_we(reg_wen)
+    );
+    assign is_jal = (instruction_s1[6:2] == 5'b11011) ? 1 : 0; // if ins1 is jal
+
 
 endmodule

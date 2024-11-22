@@ -2,9 +2,15 @@ module s3_control(
     input [31:0] instruction_s3, instruction_s2,
     input [31:0] addr,
     input rst, breq, brlt, is_jal,
+    input  uart_rx_valid,
+    input  uart_tx_ready,
+    input  [7:0] uart_rx_out,
+    input  [31:0] cyc_counter,
+    input  [31:0] instr_counter,
     output reg [2:0] mem_sel,
     output reg [1:0] wb_sel, pc_sel,
-    output reg reg_we
+    output reg reg_we,
+    output rx_data_out_ready
 );
     wire [4:0] opcode5;
     wire [2:0] func3;
@@ -86,10 +92,24 @@ module s3_control(
                 reg_we = 1'b0;
             end
         endcase
+    end
+
+    wire [31:0] counter_num;
+    wire [31:0] uart_value;
+    wire [31:0] uart_control = {30'b0, uart_rx_valid, uart_tx_ready};
+    wire [31:0] uart_reciever_data = {24'b0, uart_rx_out};
+    wire [31:0] io_calue;
+    assign uart_value = (addr[2]) ? uart_reciever_dat : uart_control;
+    assign counter_num = (addr[2]) ? instr_counter : cyc_counter;
+    assign io_value; = (addr[4]) ? counter_num : uart_value;
+
     case(addr[31:30])
         2'b00: mem_sel = 1'd1; //choose dmem
         2'b01: mem_sel = 1'd0; //choode biosmem
+        2'b10: begin
+            mem_sel = 1'd2; //choose io
+            rx_data_out_ready = ((alu_addr[4] == 1'b0) && (alu_addr[2] == 1'b1));
+        end
         endcase
-    end
-
+    rx_data_out_ready = 
 endmodule
