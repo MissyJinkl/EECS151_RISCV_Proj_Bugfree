@@ -20,7 +20,7 @@ module debouncer #(
     wire sample_pulse = (wrapping_counter == SAMPLE_CNT_MAX - 1);
 
     // wrapping_counter
-    always @(posedge clk) begin
+    always @(posedge clk) begin 
         if (sample_pulse)
             wrapping_counter <= {WRAPPING_CNT_WIDTH{1'b0}};
         else
