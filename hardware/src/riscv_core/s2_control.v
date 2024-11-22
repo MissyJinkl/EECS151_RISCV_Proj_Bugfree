@@ -75,7 +75,10 @@ module s2_control(
 
 
     always @(*) begin
-    if ((opcode_s3 == `OPC_ARI_RTYPE) || (opcode_s3 == `OPC_ARI_ITYPE) || (opcode_s3 == `OPC_AUIPC) || (opcode_s3 == `OPC_LUI)) begin
+    if (rd_3 == 0) begin
+        forward_sel_1 = 2'b10;
+        forward_sel_2 = 2'b10;
+    end else if ((opcode_s3 == `OPC_ARI_RTYPE) || (opcode_s3 == `OPC_ARI_ITYPE) || (opcode_s3 == `OPC_AUIPC) || (opcode_s3 == `OPC_LUI)) begin
         if (opcode == `OPC_ARI_RTYPE || opcode == `OPC_STORE || opcode == `OPC_BRANCH) begin
             forward_sel_1 = (rs1_2 == rd_3) ? 2'b00 : 2'b10;
             forward_sel_2 = (rs2_2 == rd_3) ? 2'b00 : 2'b10;
