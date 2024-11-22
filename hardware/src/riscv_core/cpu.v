@@ -378,4 +378,23 @@ module cpu #(
     );
     assign is_jal = (instruction_s1[6:2] == 5'b11011) ? 1 : 0; // if ins1 is jal
 
+    // Cycle Counter
+    wire [31:0] cyc_counter_d;
+    wire [31:0] cyc_counter_q;
+    reg_rst cyc_ctr (.q(cyc_counter_q),
+             .d(cyc_counter_d),
+             .rst(rst),
+             .clk(clk));
+    assign cyc_counter_d = cyc_counter_q + 1;
+
+    // Instruction Counter
+    wire [31:0] instr_counter_d;
+    wire [31:0] instr_counter_q;
+    reg_rst_ce instr_ctr (.q(instr_counter_q),
+               .d(instr_counter_d),
+               .rst(rst),
+               .ce(~nop_control),
+               .clk(clk));
+    assign instr_counter_d = instr_counter_q + 1;
+
 endmodule
