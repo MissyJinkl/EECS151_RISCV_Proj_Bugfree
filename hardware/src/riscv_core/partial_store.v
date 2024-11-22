@@ -39,6 +39,11 @@ module partial_store (
                             data_to_mem = {data_from_reg[7:0], {24{1'b0}}};
                             mem_write_mask = 4'b1000;
                         end
+
+                        default: begin
+                            mem_write_mask = 4'b0000;
+                            data_to_mem = data_from_reg;
+                        end
                     endcase
                 end
                 
@@ -53,6 +58,11 @@ module partial_store (
                             data_to_mem = {data_from_reg[15:0], {16{1'b0}}};
                             mem_write_mask = 4'b1100;
                         end
+
+                        default: begin
+                            mem_write_mask = 4'b0000;
+                            data_to_mem = data_from_reg;
+                        end
                     endcase
                 end
 
@@ -61,6 +71,10 @@ module partial_store (
                     mem_write_mask = 4'b1111;
                 end
 
+                default: begin
+                    mem_write_mask = 4'b0000;
+                    data_to_mem = data_from_reg;
+                end
             endcase
         end
     end

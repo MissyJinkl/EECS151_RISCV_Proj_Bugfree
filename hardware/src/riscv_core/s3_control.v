@@ -97,6 +97,11 @@ module s3_control(
                 wb_sel = 2'd1;
                 reg_we = 1'b0;
             end
+            default: begin
+                //mem_sel = 3'd1;
+                wb_sel = 2'd1;
+                reg_we = 1'b0;
+            end
         endcase
 
     case(addr[31:30])

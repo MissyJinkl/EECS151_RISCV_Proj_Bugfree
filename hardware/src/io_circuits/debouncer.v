@@ -27,7 +27,7 @@ module debouncer #(
             wrapping_counter <= wrapping_counter + 1;
     end
 
-    reg [WIDTH-1:0] debounced_signal = {WIDTH{1'b0}};
+    assign debounced_signal = {WIDTH{1'b0}};
     reg [SAT_CNT_WIDTH-1:0] saturating_counter [WIDTH-1:0];
     integer i;
 

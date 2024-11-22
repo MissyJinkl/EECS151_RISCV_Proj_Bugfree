@@ -36,6 +36,7 @@ module s2_control(
                     `FNC_OR: alu_sel = 4'd6;
                     `FNC_AND: alu_sel = 4'd7;
                     `FNC_SRL_SRA: alu_sel = instruction_s2[30] ? 4'd13 : 4'd5;
+                    default: alu_sel = 4'd0;
                 endcase
             end
             `OPC_ARI_ITYPE: begin
@@ -48,14 +49,17 @@ module s2_control(
                     `FNC_OR: alu_sel = 4'd6;
                     `FNC_AND: alu_sel = 4'd7;
                     `FNC_SRL_SRA: alu_sel = instruction_s2[30] ? 4'd13 : 4'd5;
+                    default: alu_sel = 4'd0;
                 endcase
             end
             `OPC_CSR: begin
                 case(func3)
                     3'b001: alu_sel = 4'd8; //csrrw
                     3'b101: alu_sel = 4'd15; //csrrwi
+                    default: alu_sel = 4'd0;
                 endcase
             end
+            default: alu_sel = 4'd0;
         endcase
     end
 

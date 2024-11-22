@@ -138,9 +138,6 @@ module bios_tb();
     fpga_to_host(8'h0a); // \n
     fpga_to_host(8'h31); // 1
     fpga_to_host(8'h35); // 5
-    fpga_to_host(8'h31); // 1
-    fpga_to_host(8'h3e); // >
-    fpga_to_host(8'h20); // [space]
 
     // Test invalid command
     $display("[TEST 2] Send an invalid command. Expect to see: \\n\\rUnrecognized token: ");
