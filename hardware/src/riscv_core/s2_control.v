@@ -1,15 +1,14 @@
 module s2_control(
-    input [31:0] instruction_s2,
-    //output [1:0] rs1_sel, rs2_sel,
+    input [31:0] instruction_s2, instruction_s3,
     output brun, a_sel, b_sel, mem_wen, csr_we,
-    output reg [3:0] alu_sel
+    output reg [3:0] alu_sel,
+    output reg [1:0] forward_sel_1, forward_sel_2
 );
-    //assign rs1_sel = 2'b10;
-    //assign rs2_sel = 2'b10;
+
     assign brun = instruction_s2[13];
 
-    wire [6:0] opcode;
-    wire [2:0] func3;
+    wire [6:0] opcode, opcode_s3;
+    wire [2:0] func3, func3_s3;
     assign opcode = instruction_s2[6:0];
     assign func3 = instruction_s2[14:12];
 
@@ -60,4 +59,64 @@ module s2_control(
     end
 
     assign csr_we = (opcode == `OPC_CSR) ? 1'b1 : 1'b0;
+
+    // handle hazard
+    assign opcode_s3 = instruction_s3[6:0];
+    assign func3_s3 = instruction_s3[14:12];
+
+    wire [4:0] rs1_2, rs1_3, rs2_2, rs2_3, rd_2, rd_3;
+    assign rs1_2 = instruction_s2[19:15];
+    assign rs1_3 = instruction_s3[19:15];
+    assign rs2_2 = instruction_s2[24:20];
+    assign rs2_3 = instruction_s3[24:20];
+    assign rd_2 = instruction_s2[11:7];
+    assign rd_3 = instruction_s3[11:7];
+
+
+    always @(*) begin
+    if ((opcode_s3 == `OPC_ARI_RTYPE) || (opcode_s3 == `OPC_ARI_ITYPE) || (opcode_s3 == `OPC_AUIPC) || (opcode_s3 == `OPC_LUI)) begin
+        if (opcode == `OPC_ARI_RTYPE || opcode == `OPC_STORE || opcode == `OPC_BRANCH) begin
+            forward_sel_1 = (rs1_2 == rd_3) ? 2'b00 : 2'b10;
+            forward_sel_2 = (rs2_2 == rd_3) ? 2'b00 : 2'b10;
+        end
+        else if (opcode == `OPC_ARI_ITYPE || opcode == `OPC_LOAD || opcode == `OPC_JALR || opcode == `OPC_CSR) begin
+            forward_sel_1 = (rs1_2 == rd_3) ? 2'b00 : 2'b10;
+            forward_sel_2 = 2'b10;
+        end
+        else begin
+            forward_sel_1 = 2'b10;
+            forward_sel_2 = 2'b10;
+        end
+    end else if (opcode_s3 == `OPC_LOAD) begin
+        if (opcode == `OPC_ARI_RTYPE || opcode == `OPC_STORE || opcode == `OPC_BRANCH) begin
+            forward_sel_1 = (rs1_2 == rd_3) ? 2'b01 : 2'b10;
+            forward_sel_2 = (rs2_2 == rd_3) ? 2'b01 : 2'b10;
+        end
+        else if (opcode == `OPC_ARI_ITYPE || opcode == `OPC_LOAD || opcode == `OPC_JALR || opcode == `OPC_CSR) begin
+            forward_sel_1 = (rs1_2 == rd_3) ? 2'b01 : 2'b10;
+            forward_sel_2 = 2'b10;
+        end
+        else begin
+            forward_sel_1 = 2'b10;
+            forward_sel_2 = 2'b10;
+        end
+    end else if (opcode_s3 == `OPC_JAL) begin
+        if (opcode == `OPC_ARI_RTYPE || opcode == `OPC_STORE || opcode == `OPC_BRANCH) begin
+            forward_sel_1 = (rs1_2 == rd_3) ? 2'b11 : 2'b10;
+            forward_sel_2 = (rs2_2 == rd_3) ? 2'b11 : 2'b10;
+        end
+        else if (opcode == `OPC_ARI_ITYPE || opcode == `OPC_LOAD || opcode == `OPC_JALR || opcode == `OPC_CSR) begin
+            forward_sel_1 = (rs1_2 == rd_3) ? 2'b11 : 2'b10;
+            forward_sel_2 = 2'b10;
+        end
+        else begin
+            forward_sel_1 = 2'b10;
+            forward_sel_2 = 2'b10;
+        end
+    end else begin
+        forward_sel_1 = 2'b10;
+        forward_sel_2 = 2'b10;
+    end
+    end
+
 endmodule

@@ -191,16 +191,16 @@ module cpu #(
     );
 
     // pipeline registers between stage1 and stage2
-    wire [31:0] reg_rd1_s2, reg_rd2_s2, pc_s2;
+    wire [31:0] reg_rd1_q, reg_rd2_q, pc_s2, reg_rs1, reg_rs2;
     reg32 pip_reg_s12_2 (
       .clk(clk),
-      .d(reg_rd1_s1),
-      .q(reg_rd1_s2)
+      .d(reg_rs1),
+      .q(reg_rd1_q)
     );
     reg32 pip_reg_s12_3 (
       .clk(clk),
-      .d(reg_rd2_s1),
-      .q(reg_rd2_s2)
+      .d(reg_rs2),
+      .q(reg_rd2_q)
     );
     reg32 pip_reg_s12_1 (
       .clk(clk),
@@ -213,12 +213,29 @@ module cpu #(
       .q(imm_s2)
     );
 
-    /*// stage 1 control unit
-    s1_control s1_CU(
+    // stage 1 control unit
+    wire hazard2_sel_1, hazard2_sel_2;
+    s1_control s1_CU (
       .instruction_s1(instruction_s1),
-      .pc(pc_q),
-      .nop_control(nop_control)
-    );*/
+      .instruction_s3(instruction_s3),
+      .hazard2_sel_1(hazard2_sel_1),
+      .hazard2_sel_2(hazard2_sel_2)
+    );
+
+    // 2 cycle hazard select mux
+    mux2to1 hazard2_mux1 (
+      .in0(wb),
+      .in1(reg_rd1_s1),
+      .sel(hazard2_sel_1),
+      .out(reg_rs1)
+    );
+
+    mux2to1 hazard2_mux2 (
+      .in0(wb),
+      .in1(reg_rd2_s1),
+      .sel(hazard2_sel_2),
+      .out(reg_rs2)
+    );
 
     /* stage2: EX */
 
@@ -231,6 +248,7 @@ module cpu #(
 
     // branch comparator
     wire brun, breq, brlt;
+    wire [31:0] reg_rd1_s2, reg_rd2_s2;
     branch_comp branch_com_ins (
       .brdata1(reg_rd1_s2),
       .brdata2(reg_rd2_s2),
@@ -238,14 +256,37 @@ module cpu #(
       .breq(breq),
       .brlt(brlt)
     );
+    
+    // forwarding mux 1
+    wire [1:0] forward_sel_1, forward_sel_2;
+    wire [31:0] data_to_reg, alu_result_q;
+    mux4to1 forwarding_mux1 (
+      .in0(alu_result_q),
+      .in1(data_to_reg),
+      .in2(reg_rd1_q),
+      .in3(wb),
+      .sel(forward_sel_1),
+      .out(reg_rd1_s2)
+    );
+
+    // forwarding mux 2
+    mux4to1 forwarding_mux2 (
+      .in0(alu_result_q),
+      .in1(data_to_reg),
+      .in2(reg_rd2_q),
+      .in3(wb),
+      .sel(forward_sel_2),
+      .out(reg_rd2_s2)
+    );
 
     // stage 2 control unit
     wire a_sel, b_sel, mem_wen, csr_we;
     wire [3:0] alu_sel;
     s2_control s2_CU (
       .instruction_s2(instruction_s2),
-      //.rs1_sel(), 
-      //.rs2_sel(),
+      .instruction_s3(instruction_s3),
+      .forward_sel_1(forward_sel_1),
+      .forward_sel_2(forward_sel_2),
       .brun(brun),
       .a_sel(a_sel),
       .b_sel(b_sel),
@@ -327,7 +368,6 @@ module cpu #(
     );
     
     // partial load
-    wire [31:0] data_to_reg;
     partial_load partial_load_ins(
       .instruction(instruction_s3),
       .data_from_mem(data_from_mem),
