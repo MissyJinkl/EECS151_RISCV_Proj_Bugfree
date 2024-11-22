@@ -52,7 +52,7 @@ module cpu #(
     wire imem_ena;
     imem imem (
       .clk(clk),
-      .ena(imem_ena),
+      .ena(1'b1),
       .wea(imem_wea),
       .addra(imem_addra),
       .dina(imem_dina),

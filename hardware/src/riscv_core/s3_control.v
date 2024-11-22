@@ -93,7 +93,7 @@ module s3_control(
                 reg_we = 1'b1;
             end
             5'b11100: begin
-                mem_sel = 3'd1;
+                //mem_sel = 3'd1;
                 wb_sel = 2'd1;
                 reg_we = 1'b0;
             end
@@ -106,6 +106,7 @@ module s3_control(
             mem_sel = 3'd2; //choose io
             rx_data_out_ready = ((addr[4] == 1'b0) && (addr[2] == 1'b1));
         end
+        default: mem_sel = 3'd1;
         endcase
     end
 
