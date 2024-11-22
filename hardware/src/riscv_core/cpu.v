@@ -324,7 +324,7 @@ module cpu #(
     assign dmem_addr = alu_result[15:2];
     assign imem_addra = alu_result[15:2];
     assign bios_addrb = alu_result[13:2];
-    assign uart_tx_data_in_valid = ((alu_result == 32'h80000008) && (instruction_s2[6:2] == `OPC_STORE_5));
+    assign uart_tx_data_in_valid = ((alu_result == 32'h80000008) && (instruction_s2[6:0] == `OPC_STORE));
     wire ctr_reset = (alu_result == 32'h80000018) && instruction_s2[6:0] == `OPC_STORE;
     //assign serial_in = 
 
@@ -344,6 +344,7 @@ module cpu #(
     assign imem_wea = wea;
     assign dmem_din = data_to_mem;
     assign imem_dina = data_to_mem;
+    assign uart_tx_data_in = data_to_mem;
 
     // pipeline registers between stage2 and stage3
     wire [31:0] pc_s3;
