@@ -322,11 +322,12 @@ module cpu #(
     assign imem_addra = alu_result[15:2];
     assign bios_addrb = alu_result[13:2];
     assign uart_tx_data_in_valid = ((alu_result == 32'h80000008) && (instruction_s2[6:2] == `OPC_STORE_5));
+    wire ctr_reset = (alu_result == 32'h80000018) && instruction_s2[6:0] == `OPC_STORE;
 
     //partial_store
     wire [31:0] data_to_mem;
     wire [3:0] wea;
-    wire mem_wen;
+    //wire mem_wen;
     partial_store partial_store_ins(
       .instruction(instruction_s2),
       .data_from_reg(reg_rd2_s2),
@@ -341,7 +342,7 @@ module cpu #(
     assign imem_dina = data_to_mem;
 
     // pipeline registers between stage2 and stage3
-    wire [31:0] alu_result_q, pc_s3;
+    wire [31:0] pc_s3;
     reg32 pip_reg_s23_1 (
       .clk(clk),
       .d(alu_result),
@@ -358,10 +359,11 @@ module cpu #(
     // memory select mux
     wire [2:0] mem_sel;
     wire [31:0] data_from_mem;
+    wire [31:0] io_value;
     mux5to1 mem_sel_mux(
       .in0(bios_doutb),                // modify these zeros
       .in1(dmem_dout),
-      .in2(0),
+      .in2(io_value),
       .in3(0),
       .in4(0),
       .sel(mem_sel),
@@ -430,9 +432,9 @@ module cpu #(
       .rst(rst),
       .breq(breq),
       .brlt(brlt),
-      .uart_rx_valid(uart_rx_valid),
-      .uart_tx_ready(uart_tx_ready),
-      .uart_rx_out(uart_rx_out),
+      .uart_rx_valid(uart_rx_data_out_valid),
+      .uart_tx_ready(uart_tx_data_in_ready),
+      .uart_rx_out(uart_rx_data_out),
       .cyc_counter(cyc_counter_d),
       .instr_counter(instr_counter_d),
       .mem_sel(mem_sel),
@@ -440,7 +442,8 @@ module cpu #(
       .wb_sel(wb_sel),
       .pc_sel(pc_sel),
       .reg_we(reg_wen),
-      .rx_data_out_ready(uart_rx_data_out_ready)
+      .rx_data_out_ready(uart_rx_data_out_ready),
+      .io_value(io_value)
     );
     assign is_jal = (instruction_s1[6:2] == 5'b11011) ? 1 : 0; // if ins1 is jal
 
