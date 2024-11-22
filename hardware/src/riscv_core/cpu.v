@@ -344,7 +344,7 @@ module cpu #(
     assign imem_wea = wea;
     assign dmem_din = data_to_mem;
     assign imem_dina = data_to_mem;
-    assign uart_tx_data_in = data_to_mem;
+    assign uart_tx_data_in = data_to_mem[7:0];
 
     // pipeline registers between stage2 and stage3
     wire [31:0] pc_s3;

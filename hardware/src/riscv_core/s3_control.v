@@ -98,17 +98,15 @@ module s3_control(
                 reg_we = 1'b0;
             end
         endcase
-
-    case(addr[31:30])
-        2'b00: mem_sel = 3'd1; //choose dmem
-        2'b01: mem_sel = 3'd0; //choode biosmem
-        2'b10: begin
-            mem_sel = 3'd2; //choose io
-            //rx_data_out_ready = ((addr[4] == 1'b0) && (addr[2] == 1'b1));
-        end
-        default: mem_sel = 3'd1;
-        endcase
     end
-
+    always @(*) begin
+        case(addr[31:30])
+            2'b00: mem_sel = 3'd1; //choose dmem
+            2'b01: mem_sel = 3'd0; //choode biosmem
+            2'b10: mem_sel = 3'd2; //choose io
+                //rx_data_out_ready = ((addr[4] == 1'b0) && (addr[2] == 1'b1));
+            default: mem_sel = 3'd1;
+            endcase
+    end
 
 endmodule
