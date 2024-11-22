@@ -12,10 +12,11 @@ module imm_gen(
             `OPC_ARI_ITYPE_5: begin
                 if ((instruction[14:12] == `FNC_SLL) || (instruction[14:12] == `FNC_SRL_SRA)) begin
                     imm = {{27{1'b0}}, instruction[24:20]}; 
-                end else begin
-                    if((instruction[14:12] == `FNC_SLTU)) imm = {{20'b0}, instruction[31:20]};
+                end 
+                //else begin
+                    //if((instruction[14:12] == `FNC_SLTU)) imm = {{20'b0}, instruction[31:20]};
                     else imm = {{21{instruction[31]}}, instruction[30:20]};
-                end
+                // end
             end
             // S-type
             `OPC_STORE_5: imm = {{21{instruction[31]}}, instruction[30:25], instruction[11:7]};
