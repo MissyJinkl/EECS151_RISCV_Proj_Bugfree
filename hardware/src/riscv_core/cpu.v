@@ -1,3 +1,4 @@
+`include "opcode.vh"
 module cpu #(
     parameter CPU_CLOCK_FREQ = 50_000_000,
     parameter RESET_PC = 32'h4000_0000,
@@ -438,7 +439,8 @@ module cpu #(
       .is_jal(is_jal),
       .wb_sel(wb_sel),
       .pc_sel(pc_sel),
-      .reg_we(reg_wen)
+      .reg_we(reg_wen),
+      .rx_data_out_ready(uart_rx_data_out_ready)
     );
     assign is_jal = (instruction_s1[6:2] == 5'b11011) ? 1 : 0; // if ins1 is jal
 
