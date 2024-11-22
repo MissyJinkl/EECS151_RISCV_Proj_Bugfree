@@ -286,6 +286,9 @@ module cpu #(
     s2_control s2_CU (
       .instruction_s2(instruction_s2),
       .instruction_s3(instruction_s3),
+      .pc(pc_s2),
+      .alu_result(alu_result),
+      .imem_wea(imem_wea),
       .forward_sel_1(forward_sel_1),
       .forward_sel_2(forward_sel_2),
       .brun(brun),
