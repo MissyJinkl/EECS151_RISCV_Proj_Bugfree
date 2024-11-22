@@ -1,12 +1,12 @@
 module s2_control(
     input [31:0] instruction_s2, instruction_s3, alu_result, pc,
-    output brun, a_sel, b_sel, mem_wen, csr_we, imem_wea,
+    output brun, a_sel, b_sel, mem_wen, csr_we, imem_ena,
     output reg [3:0] alu_sel,
     output reg [1:0] forward_sel_1, forward_sel_2
 );
 
     assign brun = instruction_s2[13];
-    assign imem_wea = (alu_result[31:29] == 3'b001 && pc[30] == 1'b1);
+    assign imem_ena = (alu_result[31:29] == 3'b001 && pc[30] == 1'b1);
 
     wire [6:0] opcode, opcode_s3;
     wire [2:0] func3, func3_s3;
