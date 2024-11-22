@@ -7,6 +7,7 @@ module s2_control(
 
     assign brun = instruction_s2[13];
     assign imem_ena = (alu_result[31:29] == 3'b001 && pc[30] == 1'b1);
+    //assign imem_ena = 1'b1;
 
     wire [6:0] opcode, opcode_s3;
     wire [2:0] func3, func3_s3;
