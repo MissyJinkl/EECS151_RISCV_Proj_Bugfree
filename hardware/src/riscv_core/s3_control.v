@@ -10,7 +10,8 @@ module s3_control(
     output reg [2:0] mem_sel,
     output reg [1:0] wb_sel, pc_sel,
     output reg reg_we,
-    output reg rx_data_out_ready
+    output reg rx_data_out_ready,
+    output [31:0] io_value
 );
     wire [4:0] opcode5;
     wire [2:0] func3;
@@ -40,7 +41,6 @@ module s3_control(
     wire [31:0] uart_value;
     wire [31:0] uart_control = {30'b0, uart_rx_valid, uart_tx_ready};
     wire [31:0] uart_reciever_data = {24'b0, uart_rx_out};
-    wire [31:0] io_calue;
     assign uart_value = (addr[2]) ? uart_reciever_data : uart_control;
     assign counter_num = (addr[2]) ? instr_counter : cyc_counter;
     assign io_value = (addr[4]) ? counter_num : uart_value;
