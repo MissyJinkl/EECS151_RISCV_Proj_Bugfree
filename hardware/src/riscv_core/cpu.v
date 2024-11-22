@@ -277,6 +277,8 @@ module cpu #(
       .alu_result(alu_result)
     );
     assign dmem_addr = alu_result[15:2];
+    assign imem_addra = alu_result[15:2];
+    assign bios_addrb = alu_result[13:2];
 
     //partial_store
     wire [31:0] data_to_mem;
@@ -291,7 +293,9 @@ module cpu #(
       .mem_write_mask(wea)
     );
     assign dmem_we = wea;
+    assign imem_wea = wea;
     assign dmem_din = data_to_mem;
+    assign imem_dina = data_to_mem;
 
     // pipeline registers between stage2 and stage3
     wire [31:0] alu_result_q, pc_s3;
