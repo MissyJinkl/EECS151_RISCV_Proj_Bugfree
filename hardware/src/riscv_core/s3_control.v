@@ -30,8 +30,6 @@ module s3_control(
         else pc_sel = 2'd0;
     end
 
-    
-
     always @(*) begin
         case(opcode5)
             `OPC_LUI_5: begin
@@ -86,5 +84,6 @@ module s3_control(
             end
         endcase
     end
+
 
 endmodule
