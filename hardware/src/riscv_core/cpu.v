@@ -20,7 +20,7 @@ module cpu #(
       .ena(1'b1), //modify this?
       .addra(bios_addra), 
       .douta(bios_douta),
-      .enb(bios_enb),
+      .enb(1'b1),
       .addrb(bios_addrb),
       .doutb(bios_doutb)
     );
