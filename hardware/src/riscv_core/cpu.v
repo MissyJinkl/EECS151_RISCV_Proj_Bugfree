@@ -447,10 +447,10 @@ module cpu #(
       .wb_sel(wb_sel),
       .pc_sel(pc_sel),
       .reg_we(reg_wen),
-      .rx_data_out_ready(uart_rx_data_out_ready),
+      //.rx_data_out_ready(uart_rx_data_out_ready),
       .io_value(io_value)
     );
     assign is_jal = (instruction_s1[6:2] == 5'b11011) ? 1 : 0; // if ins1 is jal
-
+    assign uart_rx_data_out_ready = ((alu_result_q == 32'h80000004) && (instruction_s3[6:0] == `OPC_LOAD));
 
 endmodule

@@ -10,7 +10,7 @@ module s3_control(
     output reg [2:0] mem_sel,
     output reg [1:0] wb_sel, pc_sel,
     output reg reg_we,
-    output reg rx_data_out_ready,
+    //output reg rx_data_out_ready,
     output [31:0] io_value
 );
     wire [4:0] opcode5;
@@ -104,7 +104,7 @@ module s3_control(
         2'b01: mem_sel = 3'd0; //choode biosmem
         2'b10: begin
             mem_sel = 3'd2; //choose io
-            rx_data_out_ready = ((addr[4] == 1'b0) && (addr[2] == 1'b1));
+            //rx_data_out_ready = ((addr[4] == 1'b0) && (addr[2] == 1'b1));
         end
         default: mem_sel = 3'd1;
         endcase
