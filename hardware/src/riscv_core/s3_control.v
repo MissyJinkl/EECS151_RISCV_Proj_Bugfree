@@ -108,6 +108,6 @@ module s3_control(
             mem_sel = 1'd2; //choose io
             rx_data_out_ready = ((alu_addr[4] == 1'b0) && (alu_addr[2] == 1'b1));
         end
-        endcase
+    endcase
 
 endmodule

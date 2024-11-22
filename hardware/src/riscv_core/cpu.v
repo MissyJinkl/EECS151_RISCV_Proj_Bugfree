@@ -285,6 +285,9 @@ module cpu #(
     s2_control s2_CU (
       .instruction_s2(instruction_s2),
       .instruction_s3(instruction_s3),
+      .pc(pc_s2),
+      .alu_result(alu_result),
+      .imem_wea(imem_wea),
       .forward_sel_1(forward_sel_1),
       .forward_sel_2(forward_sel_2),
       .brun(brun),
@@ -320,7 +323,7 @@ module cpu #(
     assign dmem_addr = alu_result[15:2];
     assign imem_addra = alu_result[15:2];
     assign bios_addrb = alu_result[13:2];
-    assign uart_tx_data_in_valid = ((alu_result == 32'h80000008) && (instruction_s2[6:2] == `OPC_STORE_5));
+    assign uart_tx_data_in_valid = ((alu_result == 32'h80000008) && (instruction_s2[6:2] == 5'b01000));
 
     //partial_store
     wire [31:0] data_to_mem;
