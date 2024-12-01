@@ -408,13 +408,13 @@ module cpu #(
       .en(csr_we),
       .q(tohost_csr)
     );
-
+    wire ctr_rst = (alu_result == 32'h80000018) && instruction_s2[6:0] == `OPC_STORE;
     // Cycle Counter
     wire [31:0] cyc_counter_d;
     wire [31:0] cyc_counter_q;
     reg_rst cyc_ctr (.q(cyc_counter_q),
              .d(cyc_counter_d),
-             .rst(rst),
+             .rst(rst || ctr_rst),
              .clk(clk));
     assign cyc_counter_d = cyc_counter_q + 1;
 
@@ -423,7 +423,7 @@ module cpu #(
     wire [31:0] instr_counter_q;
     reg_rst_ce instr_ctr (.q(instr_counter_q),
                .d(instr_counter_d),
-               .rst(rst),
+               .rst(rst || ctr_rst),
                .ce(~nop_control),
                .clk(clk));
     assign instr_counter_d = instr_counter_q + 1;
