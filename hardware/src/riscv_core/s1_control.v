@@ -45,7 +45,7 @@ module s1_control(
             hazard2_sel_1 = 1'b1;
             hazard2_sel_2 = 1'b1;
         end
-    end else if (opcode_s3 == `OPC_JALR) begin
+    end else if (opcode_s3 == `OPC_JALR || opcode_s3 == `OPC_JAL) begin
         if (opcode_s1 == `OPC_ARI_RTYPE || opcode_s1 == `OPC_STORE || opcode_s1 == `OPC_BRANCH) begin
             hazard2_sel_1 = (rs1_1 == rd_3) ? 1'b0 : 1'b1;
             hazard2_sel_2 = (rs2_1 == rd_3) ? 1'b0 : 1'b1;
