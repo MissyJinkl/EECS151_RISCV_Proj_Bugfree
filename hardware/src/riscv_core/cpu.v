@@ -403,10 +403,10 @@ module cpu #(
     );
 
     // csr register
-    reg32_with_enable csr_reg(
+    reg_rst_ce csr_reg(
       .clk(clk),
       .d(alu_result),
-      .en(csr_we),
+      .ce(csr_we),
       .q(tohost_csr)
     );
     wire ctr_rst = (alu_result == 32'h80000018) && instruction_s2[6:0] == `OPC_STORE;
