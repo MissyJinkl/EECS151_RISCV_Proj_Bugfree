@@ -14,6 +14,16 @@ module sat_updn #(
 );
 
     // TODO: Your code
-    assign out = '0;
+    always @(*) begin
+		if (up) begin
+			out = (in < ((2 ** WIDTH) - 1)) ? (in + 1) : in;
+		end
+		else if (dn) begin
+			out = (in > 0) ? (in - 1) : in;
+		end
+		else begin
+			out = in;
+		end
+	end
 
 endmodule

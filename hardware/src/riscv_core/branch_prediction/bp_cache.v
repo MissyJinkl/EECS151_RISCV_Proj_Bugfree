@@ -31,9 +31,29 @@ module bp_cache #(
 );
 
     // TODO: Your code
-    assign dout0 = '0;
-    assign dout1 = '0;
-    assign hit0  = 1'b0;
-    assign hit1  = 1'b0;
+    // 2 asynchronous read
+    localparam index_size = $clog2(LINES);
+    localparam tag_size = AWIDTH - $clog2(LINES); //no offset
+
+	reg [tag_size-1:0] tag [0:LINES-1];
+	reg valid [0:LINES-1];
+	reg [DWIDTH-1:0] data [0:LINES-1];
+
+	assign hit0 = (valid[ra0[index_size-1:0]] == 1'b1) && (tag[ra0[index_size-1:0]] == ra0[AWIDTH-1:index_size]);
+	assign hit1 = (valid[ra1[index_size-1:0]] == 1'b1) && (tag[ra1[index_size-1:0]] == ra1[AWIDTH-1:index_size]);
+	assign dout0 = data[ra0[index_size-1:0]];
+	assign dout1 = data[ra1[index_size-1:0]];
+
+	// 1 synchronous write
+	always @(posedge clk) begin
+		if (reset) begin
+			valid [0:LINES-1] <= 0;
+		end
+		else if (we) begin
+			tag[wa[index_size-1:0]] <= wa[AWIDTH-1:index_size];
+			valid[wa[index_size-1:0]] <= 1'b1;
+			data[wa[index_size-1:0]] <= din;
+		end
+	end
 
 endmodule
