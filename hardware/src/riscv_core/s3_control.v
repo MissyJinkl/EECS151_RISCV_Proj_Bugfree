@@ -7,6 +7,9 @@ module s3_control(
     input  [7:0] uart_rx_out,
     input  [31:0] cyc_counter,
     input  [31:0] instr_counter,
+    input  [31:0] br_instr_counter,
+    input  [31:0] correct_br_counter,
+    //input br_pred_taken,
     output reg [2:0] mem_sel,
     output reg [1:0] wb_sel, pc_sel,
     output reg reg_we,
@@ -37,13 +40,20 @@ module s3_control(
         end
         else pc_sel = 2'd0;
     end
-    wire [31:0] counter_num;
+    reg [31:0] counter_num;
     wire [31:0] uart_value;
     wire [31:0] uart_control = {30'b0, uart_rx_valid, uart_tx_ready};
     wire [31:0] uart_reciever_data = {24'b0, uart_rx_out};
     assign uart_value = (addr[2]) ? uart_reciever_data : uart_control;
-    assign counter_num = (addr[2]) ? instr_counter : cyc_counter;
+    //assign counter_num = (addr[2]) ? instr_counter : cyc_counter;
     assign io_value = (addr[4]) ? counter_num : uart_value;
+    always @(*) begin
+        if (addr == 32'h80000010) counter_num = cyc_counter;
+        else if (addr == 32'h80000014) counter_num = instr_counter;
+        else if (addr == 32'h8000001c) counter_num = br_instr_counter;
+        else if (addr == 32'h80000020) counter_num = correct_br_counter;
+        else counter_num = 0;
+    end
 
     always @(*) begin
         case(opcode5)

@@ -23,3 +23,13 @@ module reg_rst_ce(q, d, rst, ce, clk);
         if (rst) q <= {N{1'b0}};
         else if (ce) q <= d;
 endmodule // REGISTER_R_CE
+
+module reg_1(q, d, clk);
+    input d;
+    input clk;
+    initial q = 1'b0;
+    output reg q;
+    
+    always @(posedge clk)
+        q <= d;
+endmodule

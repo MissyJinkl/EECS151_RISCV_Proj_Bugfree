@@ -10,7 +10,7 @@ module sat_updn #(
     input up,
     input dn,
 
-    output [WIDTH-1:0] out
+    output reg [WIDTH-1:0] out
 );
 
     // TODO: Your code

@@ -109,6 +109,7 @@ module cpu #(
     // Add as many modules as you want
     // Feel free to move the memory modules around
 
+
     /* stage1: IFD */
 
     // pc_sel mux
@@ -155,8 +156,17 @@ module cpu #(
     );
 
     // 0/4 mux and adder
-    wire nop_control;
-    assign nop_control = ((instruction_s2[6:2] == 5'b11001) || (instruction_s2[6:2] == 5'b11000)) ? 1 : 0; // if ins2 is jalr or branch
+    reg nop_control;
+    reg br_taken_check;
+    always @(*)begin
+      if (instruction_s2[6:2] == 5'b11001) nop_control = 1'b1;
+      else if(instruction_s2[6:2] == 5'b11000) begin // is branch
+        if (bp_enable && br_taken_check) nop_control = 1'b1;
+        else nop_control = 1'b0;
+      end
+      else nop_control = 1'b0;
+    end
+    
     wire [31:0] zero_or_4;
     mux2to1 zero_or_4_mux (
       .in0(32'd4),
@@ -360,6 +370,30 @@ module cpu #(
       .q(pc_s3)
     );
 
+    // branch predictor
+    wire is_br_guess, is_br_check, br_pred_taken;
+    always @(*) begin  
+      if ((instruction_s2[14:12] == `FNC_BEQ) && breq) br_taken_check = 1'b1;
+      else if ((instruction_s2[14:12] == `FNC_BNE) && !breq) br_taken_check = 1'b1;
+      else if ((instruction_s2[14:12] == `FNC_BLT) && brlt) br_taken_check = 1'b1;
+      else if ((instruction_s2[14:12] == `FNC_BGE) && !brlt) br_taken_check = 1'b1;
+      else if ((instruction_s2[14:12] == `FNC_BLTU) && brlt) br_taken_check = 1'b1;
+      else if ((instruction_s2[14:12] == `FNC_BGEU) && !brlt) br_taken_check = 1'b1;
+      else br_taken_check = 1'b0;
+    end
+    assign is_br_guess = instruction_s1[6:0] == `OPC_BRANCH;
+    assign is_br_check = instruction_s2[6:0] == `OPC_BRANCH;
+    branch_predictor branch_predictor_ins(
+      .clk(clk),
+      .reset(rst),
+      .pc_guess(pc_q),
+      .is_br_guess(is_br_guess),
+      .pc_check(pc_s2),
+      .is_br_check(is_br_check),
+      .br_taken_check(br_taken_check),
+      .br_pred_taken(br_pred_taken)
+    );
+
     /* stage3: MEM & WB */
 
     // memory select mux
@@ -409,13 +443,13 @@ module cpu #(
       .ce(csr_we),
       .q(tohost_csr)
     );
-    wire ctr_rst = (alu_result == 32'h80000018) && instruction_s2[6:0] == `OPC_STORE;
+    //wire ctr_rst = (alu_result == 32'h80000018) && instruction_s2[6:0] == `OPC_STORE;
     // Cycle Counter
     wire [31:0] cyc_counter_d;
     wire [31:0] cyc_counter_q;
     reg_rst cyc_ctr (.q(cyc_counter_q),
              .d(cyc_counter_d),
-             .rst(rst || ctr_rst),
+             .rst(rst),
              .clk(clk));
     assign cyc_counter_d = cyc_counter_q + 1;
 
@@ -424,10 +458,37 @@ module cpu #(
     wire [31:0] instr_counter_q;
     reg_rst_ce instr_ctr (.q(instr_counter_q),
                .d(instr_counter_d),
-               .rst(rst || ctr_rst),
+               .rst(rst),
                .ce(~nop_control),
                .clk(clk));
     assign instr_counter_d = instr_counter_q + 1;
+
+    // Total branch instruction counter
+    wire [31:0] br_instr_counter_d;
+    wire [31:0] br_instr_counter_q;
+    reg_rst_ce br_instr_ctr (.q(br_instr_counter_q),
+               .d(br_instr_counter_d),
+               .rst(rst),
+               .ce(is_br_check),
+               .clk(clk));
+    assign br_instr_counter_d = br_instr_counter_q + 1;
+
+    // Correct branch prediction counter
+    wire [31:0] correct_br_counter_d;
+    wire [31:0] correct_br_counter_q;
+    wire br_pred_taken_q, correct_br_ctr_ce;
+    reg_1 br_pred_taken_reg (
+      .d(br_pred_taken),
+      .q(br_pred_taken_q),
+      .clk(clk)
+    );
+    assign correct_br_ctr_ce = (br_pred_taken_q == br_taken_check);
+    reg_rst_ce correct_br_ctr (.q(correct_br_counter_q),
+               .d(correct_br_counter_d),
+               .rst(rst),
+               .ce(correct_br_ctr_ce),
+               .clk(clk));
+    assign correct_br_counter_d = correct_br_counter_q + 1;
 
      // stage 3 control unit
     wire is_jal;
@@ -443,6 +504,9 @@ module cpu #(
       .uart_rx_out(uart_rx_data_out),
       .cyc_counter(cyc_counter_d),
       .instr_counter(instr_counter_d),
+      .br_instr_counter(br_instr_counter_d),
+      .correct_br_counter(correct_br_counter_d),
+      //.br_pred_taken(br_pred_taken),
       .mem_sel(mem_sel),
       .is_jal(is_jal),
       .wb_sel(wb_sel),
