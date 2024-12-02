@@ -36,7 +36,7 @@ module bp_cache #(
     localparam tag_size = AWIDTH - $clog2(LINES); //no offset
 
 	reg [tag_size-1:0] tag [0:LINES-1];
-	reg valid [0:LINES-1];
+	reg [0:LINES-1] valid;
 	reg [DWIDTH-1:0] data [0:LINES-1];
 
 	assign hit0 = (valid[ra0[index_size-1:0]] == 1'b1) && (tag[ra0[index_size-1:0]] == ra0[AWIDTH-1:index_size]);
