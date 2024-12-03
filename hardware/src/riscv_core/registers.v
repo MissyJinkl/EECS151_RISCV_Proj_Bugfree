@@ -24,12 +24,13 @@ module reg_rst_ce(q, d, rst, ce, clk);
         else if (ce) q <= d;
 endmodule // REGISTER_R_CE
 
-module reg_1(q, d, clk);
+module reg_1(q, d, clk, rst);
     input d;
-    input clk;
+    input clk, rst;
     initial q = 1'b0;
     output reg q;
     
     always @(posedge clk)
-        q <= d;
+        if (rst) q <= 1'b0;
+        else q <= d;
 endmodule

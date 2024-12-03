@@ -445,13 +445,14 @@ module cpu #(
       .rst(rst),
       .q(tohost_csr)
     );
-    //wire ctr_rst = (alu_result == 32'h80000018) && instruction_s2[6:0] == `OPC_STORE;
+    
+    wire ctr_rst = (alu_result == 32'h80000018) && instruction_s2[6:0] == `OPC_STORE;
     // Cycle Counter
     wire [31:0] cyc_counter_d;
     wire [31:0] cyc_counter_q;
     reg_rst cyc_ctr (.q(cyc_counter_q),
              .d(cyc_counter_d),
-             .rst(rst),
+             .rst(rst || ctr_rst),
              .clk(clk));
     assign cyc_counter_d = cyc_counter_q + 1;
 
@@ -460,7 +461,7 @@ module cpu #(
     wire [31:0] instr_counter_q;
     reg_rst_ce instr_ctr (.q(instr_counter_q),
                .d(instr_counter_d),
-               .rst(rst),
+               .rst(rst || ctr_rst),
                .ce(~nop_control),
                .clk(clk));
     assign instr_counter_d = instr_counter_q + 1;
@@ -470,7 +471,7 @@ module cpu #(
     wire [31:0] br_instr_counter_q;
     reg_rst_ce br_instr_ctr (.q(br_instr_counter_q),
                .d(br_instr_counter_d),
-               .rst(rst),
+               .rst(rst || ctr_rst),
                .ce(is_br_check),
                .clk(clk));
     assign br_instr_counter_d = br_instr_counter_q + 1;
@@ -482,12 +483,13 @@ module cpu #(
     reg_1 br_pred_taken_reg (
       .d(br_pred_taken),
       .q(br_pred_taken_q),
-      .clk(clk)
+      .clk(clk),
+      .rst(rst || ctr_rst)
     );
-    assign correct_br_ctr_ce = (br_pred_taken_q == br_taken_check);
+    assign correct_br_ctr_ce = bp_enable && (br_pred_taken_q == br_taken_check);
     reg_rst_ce correct_br_ctr (.q(correct_br_counter_q),
                .d(correct_br_counter_d),
-               .rst(rst),
+               .rst(rst || ctr_rst),
                .ce(correct_br_ctr_ce),
                .clk(clk));
     assign correct_br_counter_d = correct_br_counter_q + 1;
@@ -504,10 +506,10 @@ module cpu #(
       .uart_rx_valid(uart_rx_data_out_valid),
       .uart_tx_ready(uart_tx_data_in_ready),
       .uart_rx_out(uart_rx_data_out),
-      .cyc_counter(cyc_counter_d),
-      .instr_counter(instr_counter_d),
-      .br_instr_counter(br_instr_counter_d),
-      .correct_br_counter(correct_br_counter_d),
+      .cyc_counter(cyc_counter_q),
+      .instr_counter(instr_counter_q),
+      .br_instr_counter(br_instr_counter_q),
+      .correct_br_counter(correct_br_counter_q),
       //.br_pred_taken(br_pred_taken),
       .mem_sel(mem_sel),
       .is_jal(is_jal),

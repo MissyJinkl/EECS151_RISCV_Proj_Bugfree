@@ -39,7 +39,7 @@ module mmio_counter_tb();
   initial clk = 0;
   always #(CPU_CLOCK_PERIOD/2) clk = ~clk;
   wire [31:0] csr;
-  reg bp_enable = 1'b0;
+  reg bp_enable = 1'b1;
 
   // Init PC with 32'h1000_0000 -- address space of IMem
   // When PC is in IMem's address space, IMem is read-only
@@ -243,7 +243,7 @@ module mmio_counter_tb();
     write_for_loop_program_insts(10);
     write_load_cntr_insts();
 
-    //run_cpu();
+    run_cpu();
 
     // ... what else?
     all_tests_passed = 1'b1;
