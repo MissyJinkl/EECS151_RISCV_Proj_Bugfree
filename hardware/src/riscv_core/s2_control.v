@@ -19,7 +19,6 @@ module s2_control(
     assign mem_wen = (opcode == `OPC_STORE) ? 1'b1 : 1'b0;
     always @(*) begin
         case(opcode)
-            `OPC_CSR: alu_sel = 4'd0;
             `OPC_LUI: alu_sel = 4'd15;
             `OPC_AUIPC: alu_sel = 4'd0;
             `OPC_JAL: alu_sel = 4'd0;
