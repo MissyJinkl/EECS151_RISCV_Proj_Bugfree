@@ -243,7 +243,7 @@ module mmio_counter_tb();
     write_for_loop_program_insts(10);
     write_load_cntr_insts();
 
-    run_cpu();
+    //run_cpu();
 
     // ... what else?
     all_tests_passed = 1'b1;

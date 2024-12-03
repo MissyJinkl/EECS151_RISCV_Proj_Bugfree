@@ -162,6 +162,7 @@ module cpu #(
       if (instruction_s2[6:2] == 5'b11001) nop_control = 1'b1;
       else if(instruction_s2[6:2] == 5'b11000) begin // is branch
         if (bp_enable && br_taken_check) nop_control = 1'b1;
+        else if (!bp_enable) nop_control = 1'b1;
         else nop_control = 1'b0;
       end
       else nop_control = 1'b0;
@@ -441,6 +442,7 @@ module cpu #(
       .clk(clk),
       .d(alu_result),
       .ce(csr_we),
+      .rst(rst),
       .q(tohost_csr)
     );
     //wire ctr_rst = (alu_result == 32'h80000018) && instruction_s2[6:0] == `OPC_STORE;

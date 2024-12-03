@@ -5,3 +5,4 @@
 `define IMEM_PATH cpu.imem
 `define BIOS_PATH cpu.bios_mem
 `define CSR_PATH  cpu.tohost_csr
+//`define CSR_PATH  cpu.csr_reg
