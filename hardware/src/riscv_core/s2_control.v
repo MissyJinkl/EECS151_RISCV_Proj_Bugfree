@@ -92,7 +92,7 @@ module s2_control(
             forward_sel_1 = 2'b10;
             forward_sel_2 = 2'b10;
         end
-    end else if (opcode_s3 == `OPC_LOAD) begin
+    end /*else if (opcode_s3 == `OPC_LOAD) begin
         if (opcode == `OPC_ARI_RTYPE || opcode == `OPC_STORE || opcode == `OPC_BRANCH) begin
             forward_sel_1 = (rs1_2 == rd_3 && rd_3 != 0) ? 2'b01 : 2'b10;
             forward_sel_2 = (rs2_2 == rd_3 && rd_3 != 0) ? 2'b01 : 2'b10;
@@ -118,7 +118,7 @@ module s2_control(
             forward_sel_1 = 2'b10;
             forward_sel_2 = 2'b10;
         end
-    end else begin
+    end*/ else begin
         forward_sel_1 = 2'b10;
         forward_sel_2 = 2'b10;
     end

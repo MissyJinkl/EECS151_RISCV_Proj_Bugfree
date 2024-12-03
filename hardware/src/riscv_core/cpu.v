@@ -159,7 +159,7 @@ module cpu #(
     reg nop_control;
     reg br_taken_check;
     always @(*)begin
-      if (instruction_s2[6:2] == 5'b11001) nop_control = 1'b1;
+      if (instruction_s2[6:2] == `OPC_JALR_5 || instruction_s2[6:2] == `OPC_JAL_5 || instruction_s2[6:2] == `OPC_LOAD_5) nop_control = 1'b1;
       else if(instruction_s2[6:2] == 5'b11000) begin // is branch
         if (bp_enable && br_taken_check) nop_control = 1'b1;
         else if (!bp_enable) nop_control = 1'b1;
@@ -275,9 +275,11 @@ module cpu #(
     wire [31:0] data_to_reg, alu_result_q;
     mux4to1 forwarding_mux1 (
       .in0(alu_result_q),
-      .in1(data_to_reg),
+      //.in1(data_to_reg),
+      .in1(0),
       .in2(reg_rd1_q),
-      .in3(wb),
+      //.in3(wb),
+      .in3(0),
       .sel(forward_sel_1),
       .out(reg_rd1_s2)
     );
@@ -285,9 +287,11 @@ module cpu #(
     // forwarding mux 2
     mux4to1 forwarding_mux2 (
       .in0(alu_result_q),
-      .in1(data_to_reg),
+      //.in1(data_to_reg),
+      .in1(0),
       .in2(reg_rd2_q),
-      .in3(wb),
+      //.in3(wb),
+      .in3(0),
       .sel(forward_sel_2),
       .out(reg_rd2_s2)
     );

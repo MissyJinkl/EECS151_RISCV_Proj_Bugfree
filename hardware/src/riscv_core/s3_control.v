@@ -27,8 +27,8 @@ module s3_control(
 
     always @(*) begin
         if (rst) pc_sel = 2'd3;
-        else if (is_jal) pc_sel = 2'd2;
-        else if (opcode5_s2 == `OPC_JALR_5) pc_sel = 2'd1; // if is jalr
+        //else if (is_jal) pc_sel = 2'd2;
+        else if (opcode5_s2 == `OPC_JALR_5 || opcode5_s2 == `OPC_JAL_5) pc_sel = 2'd1; // if is jalr
         else if (opcode5_s2 == `OPC_BRANCH_5) begin
             if ((func3_s2 == `FNC_BEQ) && breq) pc_sel = 2'd1;
             else if ((func3_s2 == `FNC_BNE) && !breq) pc_sel = 2'd1;
