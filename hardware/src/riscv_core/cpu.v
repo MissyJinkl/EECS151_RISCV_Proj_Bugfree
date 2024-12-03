@@ -476,7 +476,7 @@ module cpu #(
     reg_rst_ce br_instr_ctr (.q(br_instr_counter_q),
                .d(br_instr_counter_d),
                .rst(rst || ctr_rst),
-               .ce(is_br_check),
+               .ce(is_br_guess),
                .clk(clk));
     assign br_instr_counter_d = br_instr_counter_q + 1;
 
@@ -490,7 +490,7 @@ module cpu #(
       .clk(clk),
       .rst(rst || ctr_rst)
     );
-    assign correct_br_ctr_ce = bp_enable && (br_pred_taken_q == br_taken_check);
+    assign correct_br_ctr_ce = is_br_guess && bp_enable && (br_pred_taken_q == br_taken_check);
     reg_rst_ce correct_br_ctr (.q(correct_br_counter_q),
                .d(correct_br_counter_d),
                .rst(rst || ctr_rst),

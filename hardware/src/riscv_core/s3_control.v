@@ -46,7 +46,8 @@ module s3_control(
     wire [31:0] uart_reciever_data = {24'b0, uart_rx_out};
     assign uart_value = (addr[2]) ? uart_reciever_data : uart_control;
     //assign counter_num = (addr[2]) ? instr_counter : cyc_counter;
-    assign io_value = (addr[4]) ? counter_num : uart_value;
+    assign io_value = (addr[4] || addr[5]) ? counter_num : uart_value;
+    //assign io_value = (addr[4]) ? counter_num : uart_value;
     always @(*) begin
         if (addr == 32'h80000010) counter_num = cyc_counter;
         else if (addr == 32'h80000014) counter_num = instr_counter;
