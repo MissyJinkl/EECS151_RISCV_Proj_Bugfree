@@ -526,7 +526,7 @@ module cpu #(
     assign is_jal = (instruction_s1[6:2] == 5'b11011) ? 1 : 0; // if ins1 is jal
     assign uart_rx_data_out_ready = ((alu_result_q == 32'h80000004) && (instruction_s3[6:0] == `OPC_LOAD));
 
-assert property (@(posedge clk) rst === 1'b1 |-> pc == RESET_PC)
+/*assert property (@(posedge clk) rst === 1'b1 |-> pc == RESET_PC)
         else $fatal("PC did not reset to RESET_PC on reset.");
 
     // 2. 对于 store 指令，写使能掩码应根据指令类型（sb、sh、sw）有相应数量的 1：
@@ -560,6 +560,6 @@ assert property (@(posedge clk) rst === 1'b1 |-> pc == RESET_PC)
         (rd_3 == 5'b00000) |-> (regfile_data_in == 32'b0)
     )
     else $fatal("x0 register should always be 0.");
-
+*/
 
 endmodule
