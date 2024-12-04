@@ -113,14 +113,15 @@ module cpu #(
     /* stage1: IFD */
 
     // pc_sel mux
-    wire [31:0] pc_0_4, alu_result, pc_jal, pc_reset, pc_d;
-    wire [1:0] pc_sel;
+    wire [31:0] pc_0_4, alu_result, pc_jal, pc_reset, pc_d, alu_result_q;
+    wire [2:0] pc_sel;
     assign pc_reset = RESET_PC;
-    mux4to1 pc_sel_mux (
+    mux5to1 pc_sel_mux (
       .in0(pc_0_4),
       .in1(alu_result),
       .in2(pc_jal),
       .in3(pc_reset),
+      .in4(alu_result_q),
       .sel(pc_sel),
       .out(pc_d)
     );
@@ -158,6 +159,7 @@ module cpu #(
     // 0/4 mux and adder
     reg nop_control;
     reg br_taken_check;
+    wire breq_q, brlt_q;
     always @(*)begin
       if (instruction_s2[6:2] == `OPC_JALR_5 || instruction_s2[6:2] == `OPC_JAL_5 || instruction_s2[6:2] == `OPC_LOAD_5 || instruction_s2[6:2] == `OPC_BRANCH_5) nop_control = 1'b1;
       /*else if(instruction_s2[6:2] == 5'b11000) begin // is branch
@@ -165,6 +167,27 @@ module cpu #(
         else if (!bp_enable) nop_control = 1'b1;
         else nop_control = 1'b0;
       end*/
+      else if (instruction_s3[6:2] == `OPC_BRANCH_5) begin
+        if ((instruction_s3[14:12] == `FNC_BEQ) && breq_q) begin
+                nop_control = 1'b1;
+            end
+            else if ((instruction_s3[14:12] == `FNC_BNE) && !breq_q) begin
+                nop_control = 1'b1;
+            end
+            else if ((instruction_s3[14:12] == `FNC_BLT) && brlt_q) begin
+                nop_control = 1'b1;
+            end
+            else if ((instruction_s3[14:12] == `FNC_BGE) && !brlt_q) begin
+                nop_control = 1'b1;
+            end
+            else if ((instruction_s3[14:12] == `FNC_BLTU) && brlt_q) begin
+                nop_control = 1'b1;
+            end
+            else if ((instruction_s3[14:12] == `FNC_BGEU) && !brlt_q) begin
+                nop_control = 1'b1;
+            end
+            else nop_control = 1'b0;
+      end
       else nop_control = 1'b0;
     end
     //wire nop_control;
@@ -272,13 +295,7 @@ module cpu #(
       .brlt(brlt)
     );
 
-    /*wire brun_q, breq_q, brlt_q;
-    reg_1bit pip_reg_s23_brun (
-      .clk(clk),
-      .d(brun),
-      .q(brun_q)
-    );
-
+    
     reg_1bit pip_reg_s23_breq (
       .clk(clk),
       .d(breq),
@@ -289,30 +306,22 @@ module cpu #(
       .clk(clk),
       .d(brlt),
       .q(brlt_q)
-    );*/
+    );
     
     // forwarding mux 1
-    wire [1:0] forward_sel_1, forward_sel_2;
-    wire [31:0] data_to_reg, alu_result_q;
-    mux4to1 forwarding_mux1 (
+    wire forward_sel_1, forward_sel_2;
+    wire [31:0] data_to_reg;
+    mux2to1 forwarding_mux1 (
       .in0(alu_result_q),
-      //.in1(data_to_reg),
-      .in1(0),
-      .in2(reg_rd1_q),
-      //.in3(wb),
-      .in3(0),
+      .in1(reg_rd1_q),
       .sel(forward_sel_1),
       .out(reg_rd1_s2)
     );
 
     // forwarding mux 2
-    mux4to1 forwarding_mux2 (
+    mux2to1 forwarding_mux2 (
       .in0(alu_result_q),
-      //.in1(data_to_reg),
-      .in1(0),
-      .in2(reg_rd2_q),
-      //.in3(wb),
-      .in3(0),
+      .in1(reg_rd2_q),
       .sel(forward_sel_2),
       .out(reg_rd2_s2)
     );
@@ -527,8 +536,8 @@ module cpu #(
       .instruction_s2(instruction_s2),
       .addr(alu_result_q),
       .rst(rst),
-      .breq(breq),
-      .brlt(brlt),
+      .breq_q(breq_q),
+      .brlt_q(brlt_q),
       .uart_rx_valid(uart_rx_data_out_valid),
       .uart_tx_ready(uart_tx_data_in_ready),
       .uart_rx_out(uart_rx_data_out),

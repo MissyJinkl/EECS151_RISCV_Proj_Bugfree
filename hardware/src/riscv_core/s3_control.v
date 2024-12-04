@@ -1,7 +1,7 @@
 module s3_control(
     input [31:0] instruction_s3, instruction_s2,
     input [31:0] addr,
-    input rst, breq, brlt, is_jal,
+    input rst, breq_q, brlt_q, is_jal,
     input  uart_rx_valid,
     input  uart_tx_ready,
     input  [7:0] uart_rx_out,
@@ -11,7 +11,8 @@ module s3_control(
     //input  [31:0] correct_br_counter,
     //input br_pred_taken,
     output reg [2:0] mem_sel,
-    output reg [1:0] wb_sel, pc_sel,
+    output reg [1:0] wb_sel, 
+    output reg [2:0] pc_sel,
     output reg reg_we,
     //output reg rx_data_out_ready,
     output [31:0] io_value
@@ -26,41 +27,36 @@ module s3_control(
     assign func3_s2 = instruction_s2[14:12];
 
     always @(*) begin
-        if (rst) pc_sel = 2'd3;
-        //else if (is_jal) pc_sel = 2'd2;
+        if (rst) pc_sel = 3'd3;
         else if (opcode5_s2 == `OPC_JALR_5 || opcode5_s2 == `OPC_JAL_5) begin
-                pc_sel = 2'd1;
-                //alu_pc_sel = 2'd0;
+                pc_sel = 3'd1;
             end
-        else if (opcode5_s2 == `OPC_BRANCH_5) begin
-            if ((func3_s2 == `FNC_BEQ) && breq) begin
-                pc_sel = 2'd1;
-                //alu_pc_sel = 2'd1;
+        else if (opcode5_s2 == `OPC_BRANCH_5) pc_sel = 3'd0;
+        else if (opcode5 == `OPC_BRANCH_5) begin
+            if ((func3 == `FNC_BEQ) && breq_q) begin
+                pc_sel = 3'd4;
             end
-            else if ((func3_s2 == `FNC_BNE) && !breq) begin
-                pc_sel = 2'd1;
-                //alu_pc_sel = 2'd1;
+            else if ((func3 == `FNC_BNE) && !breq_q) begin
+                pc_sel = 3'd4;
             end
-            else if ((func3_s2 == `FNC_BLT) && brlt) begin
-                pc_sel = 2'd1;
-                //alu_pc_sel = 2'd1;
+            else if ((func3 == `FNC_BLT) && brlt_q) begin
+                pc_sel = 3'd4;
             end
-            else if ((func3_s2 == `FNC_BGE) && !brlt) begin
-                pc_sel = 2'd1;
-                //alu_pc_sel = 2'd1;
+            else if ((func3 == `FNC_BGE) && !brlt_q) begin
+                pc_sel = 3'd4;
             end
-            else if ((func3_s2 == `FNC_BLTU) && brlt) begin
-                pc_sel = 2'd1;
-                //alu_pc_sel = 2'd1;
+            else if ((func3 == `FNC_BLTU) && brlt_q) begin
+                pc_sel = 3'd4;
             end
-            else if ((func3_s2 == `FNC_BGEU) && !brlt) begin
-                pc_sel = 2'd1;
-                //alu_pc_sel = 2'd1;
+            else if ((func3 == `FNC_BGEU) && !brlt_q) begin
+                pc_sel = 3'd4;
             end
-            else pc_sel = 2'd0;
+            else pc_sel = 3'd0;
         end
-        else pc_sel = 2'd0;
+        else pc_sel = 3'd0;
     end
+
+    
     reg [31:0] counter_num;
     wire [31:0] uart_value;
     wire [31:0] uart_control = {30'b0, uart_rx_valid, uart_tx_ready};
