@@ -159,14 +159,16 @@ module cpu #(
     reg nop_control;
     reg br_taken_check;
     always @(*)begin
-      if (instruction_s2[6:2] == `OPC_JALR_5 || instruction_s2[6:2] == `OPC_JAL_5 || instruction_s2[6:2] == `OPC_LOAD_5) nop_control = 1'b1;
-      else if(instruction_s2[6:2] == 5'b11000) begin // is branch
+      if (instruction_s2[6:2] == `OPC_JALR_5 || instruction_s2[6:2] == `OPC_JAL_5 || instruction_s2[6:2] == `OPC_LOAD_5 || instruction_s2[6:2] == `OPC_BRANCH_5) nop_control = 1'b1;
+      /*else if(instruction_s2[6:2] == 5'b11000) begin // is branch
         if (bp_enable && br_taken_check) nop_control = 1'b1;
         else if (!bp_enable) nop_control = 1'b1;
         else nop_control = 1'b0;
-      end
+      end*/
       else nop_control = 1'b0;
     end
+    //wire nop_control;
+    //assign nop_control = ((instruction_s2[6:2] == 5'b11001) || (instruction_s2[6:2] == 5'b11000)) ? 1 : 0; // if ins2 is jalr or branch
     
     wire [31:0] zero_or_4;
     mux2to1 zero_or_4_mux (
@@ -269,6 +271,25 @@ module cpu #(
       .breq(breq),
       .brlt(brlt)
     );
+
+    /*wire brun_q, breq_q, brlt_q;
+    reg_1bit pip_reg_s23_brun (
+      .clk(clk),
+      .d(brun),
+      .q(brun_q)
+    );
+
+    reg_1bit pip_reg_s23_breq (
+      .clk(clk),
+      .d(breq),
+      .q(breq_q)
+    );
+
+    reg_1bit pip_reg_s23_brlt (
+      .clk(clk),
+      .d(brlt),
+      .q(brlt_q)
+    );*/
     
     // forwarding mux 1
     wire [1:0] forward_sel_1, forward_sel_2;
@@ -375,7 +396,7 @@ module cpu #(
       .q(pc_s3)
     );
 
-    // branch predictor
+    /*// branch predictor
     wire is_br_guess, is_br_check, br_pred_taken;
     always @(*) begin  
       if ((instruction_s2[14:12] == `FNC_BEQ) && breq) br_taken_check = 1'b1;
@@ -397,7 +418,7 @@ module cpu #(
       .is_br_check(is_br_check),
       .br_taken_check(br_taken_check),
       .br_pred_taken(br_pred_taken)
-    );
+    );*/
 
     /* stage3: MEM & WB */
 
@@ -450,7 +471,7 @@ module cpu #(
       .q(tohost_csr)
     );
     
-    wire ctr_rst = (alu_result == 32'h80000018) && instruction_s2[6:0] == `OPC_STORE;
+    wire ctr_rst = (alu_result_q == 32'h80000018) && instruction_s3[6:0] == `OPC_STORE; //change it to s3 to shorten critical path
     // Cycle Counter
     wire [31:0] cyc_counter_d;
     wire [31:0] cyc_counter_q;
@@ -470,7 +491,7 @@ module cpu #(
                .clk(clk));
     assign instr_counter_d = instr_counter_q + 1;
 
-    // Total branch instruction counter
+    /*// Total branch instruction counter
     wire [31:0] br_instr_counter_d;
     wire [31:0] br_instr_counter_q;
     reg_rst_ce br_instr_ctr (.q(br_instr_counter_q),
@@ -496,10 +517,11 @@ module cpu #(
                .rst(rst || ctr_rst),
                .ce(correct_br_ctr_ce),
                .clk(clk));
-    assign correct_br_counter_d = correct_br_counter_q + 1;
+    assign correct_br_counter_d = correct_br_counter_q + 1;*/
 
      // stage 3 control unit
     wire is_jal;
+    //wire alu_pc_sel;
     s3_control s3_CU(
       .instruction_s3(instruction_s3),
       .instruction_s2(instruction_s2),
@@ -512,8 +534,8 @@ module cpu #(
       .uart_rx_out(uart_rx_data_out),
       .cyc_counter(cyc_counter_q),
       .instr_counter(instr_counter_q),
-      .br_instr_counter(br_instr_counter_q),
-      .correct_br_counter(correct_br_counter_q),
+      //.br_instr_counter(br_instr_counter_q),
+      //.correct_br_counter(correct_br_counter_q),
       //.br_pred_taken(br_pred_taken),
       .mem_sel(mem_sel),
       .is_jal(is_jal),
@@ -522,9 +544,29 @@ module cpu #(
       .reg_we(reg_wen),
       //.rx_data_out_ready(uart_rx_data_out_ready),
       .io_value(io_value)
+      //.alu_pc_sel(alu_pc_sel)
     );
     assign is_jal = (instruction_s1[6:2] == 5'b11011) ? 1 : 0; // if ins1 is jal
     assign uart_rx_data_out_ready = ((alu_result_q == 32'h80000004) && (instruction_s3[6:0] == `OPC_LOAD));
+
+    /*wire [31:0] alu_pc;
+
+    mux2to1 alu_sel_mux (
+      .in0(alu_result),
+      .in1(alu_result_q),
+      .sel(alu_pc_sel),
+      .out(alu_pc)
+    );
+    mux4to1 pc_sel_mux (
+      .in0(pc_0_4),
+      .in1(alu_pc),
+      .in2(pc_jal),
+      .in3(pc_reset),
+      .sel(pc_sel),
+      .out(pc_d)
+    );
+    assign bios_addra = pc_d[13:2];
+    assign imem_addrb = pc_d[15:2];*/
 
 /*assert property (@(posedge clk) rst === 1'b1 |-> pc == RESET_PC)
         else $fatal("PC did not reset to RESET_PC on reset.");

@@ -34,3 +34,14 @@ module reg_1(q, d, clk, rst);
         if (rst) q <= 1'b0;
         else q <= d;
 endmodule
+
+module reg_1bit(q, d, clk);
+    parameter N = 1;
+    input [N-1:0] d;
+    input clk;
+    initial q = {N{1'b0}};
+    output reg [N-1:0] q;
+    
+    always @(posedge clk)
+     q <= d;
+endmodule
