@@ -490,7 +490,7 @@ module cpu #(
       .clk(clk),
       .rst(rst || ctr_rst)
     );
-    assign correct_br_ctr_ce = is_br_guess && bp_enable && (br_pred_taken_q == br_taken_check);
+    assign correct_br_ctr_ce = (is_br_guess && bp_enable && (br_pred_taken_q == br_taken_check)) || (!bp_enable && is_br_check && !br_taken_check);
     reg_rst_ce correct_br_ctr (.q(correct_br_counter_q),
                .d(correct_br_counter_d),
                .rst(rst || ctr_rst),
@@ -525,5 +525,41 @@ module cpu #(
     );
     assign is_jal = (instruction_s1[6:2] == 5'b11011) ? 1 : 0; // if ins1 is jal
     assign uart_rx_data_out_ready = ((alu_result_q == 32'h80000004) && (instruction_s3[6:0] == `OPC_LOAD));
+
+assert property (@(posedge clk) rst === 1'b1 |-> pc == RESET_PC)
+        else $fatal("PC did not reset to RESET_PC on reset.");
+
+    // 2. 对于 store 指令，写使能掩码应根据指令类型（sb、sh、sw）有相应数量的 1：
+    assert property (
+        @(posedge clk)
+        (opcode == `OPC_STORE) |-> 
+        ( (func3 == 3'b000 && dmem_we == 4'b0001) ||  // sb: 1 byte
+          (func3 == 3'b001 && dmem_we == 4'b0011) ||  // sh: 2 bytes
+          (func3 == 3'b010 && dmem_we == 4'b1111) )   // sw: 4 bytes
+    )
+    else $fatal("Write enable mask is incorrect for store instruction.");
+
+    // 3. 对于 lb 指令，写入 regfile 的数据的高 24 位应全为 0 或 1。对于 lh 指令，写入 regfile 的数据的高 16 位应全为 0 或 1：
+    assert property (
+        @(posedge clk)
+        (opcode == `OPC_LOAD && func3 == 3'b000) |->  // lb instruction
+        ((dmem_dout[31:24] == 8'b00000000) || (dmem_dout[31:24] == 8'b11111111))
+    )
+    else $fatal("For LB instruction, the upper 24 bits of data should be all 0s or 1s.");
+
+    assert property (
+        @(posedge clk)
+        (opcode == `OPC_LOAD && func3 == 3'b001) |->  // lh instruction
+        ((dmem_dout[31:16] == 16'b0000000000000000) || (dmem_dout[31:16] == 16'b1111111111111111))
+    )
+    else $fatal("For LH instruction, the upper 16 bits of data should be all 0s or 1s.");
+
+    // 4. x0 寄存器应始终为 0：
+    assert property (
+        @(posedge clk)
+        (rd_3 == 5'b00000) |-> (regfile_data_in == 32'b0)
+    )
+    else $fatal("x0 register should always be 0.");
+
 
 endmodule
