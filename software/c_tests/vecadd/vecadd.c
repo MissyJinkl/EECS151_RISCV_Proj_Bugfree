@@ -37,9 +37,7 @@ int main(int argc, char**argv) {
 
   if (chksum == 0x80200) {
     // pass
-    csr_tohost(1);
-  } else {
-    // fail code 2
+    csr_tohost(1);//csrrw
     csr_tohost(2);
   }
 

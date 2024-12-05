@@ -21,11 +21,11 @@ module s1_control(
     always @(*) begin
     if ((opcode_s3 == `OPC_ARI_RTYPE) || (opcode_s3 == `OPC_ARI_ITYPE) || (opcode_s3 == `OPC_AUIPC) || (opcode_s3 == `OPC_LUI)) begin
         if (opcode_s1 == `OPC_ARI_RTYPE || opcode_s1 == `OPC_STORE || opcode_s1 == `OPC_BRANCH) begin
-            hazard2_sel_1 = (rs1_1 == rd_3) ? 1'b0 : 1'b1;
-            hazard2_sel_2 = (rs2_1 == rd_3) ? 1'b0 : 1'b1;
+            hazard2_sel_1 = (rs1_1 == rd_3 && rd_3 != 0) ? 1'b0 : 1'b1;
+            hazard2_sel_2 = (rs2_1 == rd_3 && rd_3 != 0) ? 1'b0 : 1'b1;
         end
         else if (opcode_s1 == `OPC_ARI_ITYPE || opcode_s1 == `OPC_LOAD || opcode_s1 == `OPC_JALR || opcode_s1 == `OPC_CSR) begin
-            hazard2_sel_1 = (rs1_1 == rd_3) ? 1'b0 : 1'b1;
+            hazard2_sel_1 = (rs1_1 == rd_3 && rd_3 != 0) ? 1'b0 : 1'b1;
             hazard2_sel_2 = 1'b1;
         end
         else begin
@@ -34,11 +34,11 @@ module s1_control(
         end
     end else if (opcode_s3 == `OPC_LOAD) begin
         if (opcode_s1 == `OPC_ARI_RTYPE || opcode_s1 == `OPC_STORE || opcode_s1 == `OPC_BRANCH) begin
-            hazard2_sel_1 = (rs1_1 == rd_3) ? 1'b0 : 1'b1;
-            hazard2_sel_2 = (rs2_1 == rd_3) ? 1'b0 : 1'b1;
+            hazard2_sel_1 = (rs1_1 == rd_3 && rd_3 != 0) ? 1'b0 : 1'b1;
+            hazard2_sel_2 = (rs2_1 == rd_3 && rd_3 != 0) ? 1'b0 : 1'b1;
         end
         else if (opcode_s1 == `OPC_ARI_ITYPE || opcode_s1 == `OPC_LOAD || opcode_s1 == `OPC_JALR || opcode_s1 == `OPC_CSR) begin
-            hazard2_sel_1 = (rs1_1 == rd_3) ? 1'b0 : 1'b1;
+            hazard2_sel_1 = (rs1_1 == rd_3 && rd_3 != 0) ? 1'b0 : 1'b1;
             hazard2_sel_2 = 1'b1;
         end
         else begin
@@ -47,11 +47,11 @@ module s1_control(
         end
     end else if (opcode_s3 == `OPC_JALR || opcode_s3 == `OPC_JAL) begin
         if (opcode_s1 == `OPC_ARI_RTYPE || opcode_s1 == `OPC_STORE || opcode_s1 == `OPC_BRANCH) begin
-            hazard2_sel_1 = (rs1_1 == rd_3) ? 1'b0 : 1'b1;
-            hazard2_sel_2 = (rs2_1 == rd_3) ? 1'b0 : 1'b1;
+            hazard2_sel_1 = (rs1_1 == rd_3 && rd_3 != 0) ? 1'b0 : 1'b1;
+            hazard2_sel_2 = (rs2_1 == rd_3 && rd_3 != 0) ? 1'b0 : 1'b1;
         end
         else if (opcode_s1 == `OPC_ARI_ITYPE || opcode_s1 == `OPC_LOAD || opcode_s1 == `OPC_JALR || opcode_s1 == `OPC_CSR) begin
-            hazard2_sel_1 = (rs1_1 == rd_3) ? 1'b0 : 1'b1;
+            hazard2_sel_1 = (rs1_1 == rd_3 && rd_3 != 0) ? 1'b0 : 1'b1;
             hazard2_sel_2 = 1'b1;
         end
         else begin

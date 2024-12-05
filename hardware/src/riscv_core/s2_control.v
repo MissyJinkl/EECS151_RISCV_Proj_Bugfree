@@ -10,8 +10,8 @@ module s2_control(
     assign imem_ena = (alu_result[31:29] == 3'b001 && pc[30] == 1'b1);
     //assign imem_ena = 1'b1;
 
-    wire [6:0] opcode, opcode_s3;
-    wire [2:0] func3, func3_s3;
+    wire [6:0] opcode;
+    wire [2:0] func3;
     assign opcode = instruction_s2[6:0];
     assign func3 = instruction_s2[14:12];
 
@@ -85,7 +85,7 @@ module s2_control(
             forward_sel_1 = (rs1_2 == rd_3) ? 1'b0 : 1'b1;
             forward_sel_2 = (rs2_2 == rd_3) ? 1'b0 : 1'b1;
         end
-        else if (opcode == `OPC_ARI_ITYPE || opcode == `OPC_LOAD || opcode == `OPC_JALR || opcode == `OPC_CSR) begin
+        else if (opcode == `OPC_ARI_ITYPE || opcode == `OPC_LOAD || opcodcsrrwe == `OPC_JALR || opcode == `OPC_CSR) begin
             forward_sel_1 = (rs1_2 == rd_3) ? 1'b0 : 1'b1;
             forward_sel_2 = 1'b1;
         end

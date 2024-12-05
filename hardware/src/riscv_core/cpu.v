@@ -160,13 +160,16 @@ module cpu #(
     reg nop_control;
     reg br_taken_check;
     wire breq_q, brlt_q;
+    wire [4:0] rs1_1, rs1_2, rs2_1, rs2_2, rd_1, rd_2;
+    wire [31:0] ins_mem; //instruction from memory, selected by pc[30]
+    assign rs1_2 = instruction_s2[19:15];
+    assign rs1_1 = ins_mem[19:15];
+    assign rs2_2 = instruction_s2[24:20];
+    assign rs2_1 = ins_mem[24:20];
+    assign rd_2 = instruction_s2[11:7];
+    assign rd_1 = ins_mem[11:7];
     always @(*)begin
       if (instruction_s2[6:2] == `OPC_JALR_5 || instruction_s2[6:2] == `OPC_JAL_5 || instruction_s2[6:2] == `OPC_LOAD_5 || instruction_s2[6:2] == `OPC_BRANCH_5) nop_control = 1'b1;
-      /*else if(instruction_s2[6:2] == 5'b11000) begin // is branch
-        if (bp_enable && br_taken_check) nop_control = 1'b1;
-        else if (!bp_enable) nop_control = 1'b1;
-        else nop_control = 1'b0;
-      end*/
       else if (instruction_s3[6:2] == `OPC_BRANCH_5) begin
         if ((instruction_s3[14:12] == `FNC_BEQ) && breq_q) begin
                 nop_control = 1'b1;
@@ -188,7 +191,17 @@ module cpu #(
             end
             else nop_control = 1'b0;
       end
-      else nop_control = 1'b0;
+      else if ((instruction_s2[6:0] == `OPC_ARI_RTYPE) || (instruction_s2[6:0] == `OPC_ARI_ITYPE) || (instruction_s2[6:0]== `OPC_AUIPC) || (instruction_s2[6:0] == `OPC_LUI)) begin
+        if (ins_mem[6:0] == `OPC_ARI_RTYPE || ins_mem[6:0] == `OPC_STORE || ins_mem[6:0] == `OPC_BRANCH) begin
+            nop_control = ((rs1_1 == rd_2 && rd_2 != 0) || (rs2_1 == rd_2 && rd_2 != 0)) ? 1'b1 : 1'b0;
+        end else if (ins_mem[6:0] == `OPC_ARI_ITYPE || ins_mem[6:0] == `OPC_LOAD || ins_mem[6:0] == `OPC_JALR || ins_mem[6:0] == `OPC_CSR) begin
+            nop_control = (rs1_1 == rd_2 && rd_2 != 0) ? 1'b1 : 1'b0;
+        end else begin
+            nop_control = 1'b0;
+        end
+      end else begin
+          nop_control = 1'b0;
+      end
     end
     //wire nop_control;
     //assign nop_control = ((instruction_s2[6:2] == 5'b11001) || (instruction_s2[6:2] == 5'b11000)) ? 1 : 0; // if ins2 is jalr or branch
@@ -207,7 +220,7 @@ module cpu #(
     );
 
     // pc30_mux and nop_mux
-    wire [31:0] ins_mem; //instruction from memory, selected by pc[30]
+    
     mux2to1 pc30_mux (
       .in0(imem_doutb),
       .in1(bios_douta),
@@ -307,7 +320,7 @@ module cpu #(
       .d(brlt),
       .q(brlt_q)
     );
-    
+    wire [31:0] data_to_reg;
 /*    // forwarding mux 1
     wire forward_sel_1, forward_sel_2;
     wire [31:0] data_to_reg;
@@ -326,8 +339,8 @@ module cpu #(
       .out(reg_rd2_s2)
     );
 */
-    assign reg_rd2_q = reg_rd2_s2;
-    assign reg_rd1_q = reg_rd1_s2;
+    assign reg_rd2_s2 = reg_rd2_q;
+    assign reg_rd1_s2 = reg_rd1_q;
 
     // stage 2 control unit
     wire a_sel, b_sel, mem_wen, csr_we;
@@ -409,7 +422,7 @@ module cpu #(
     );
 
     /*// branch predictor
-    wire is_br_guess, is_br_check, br_pred_taken;
+    wire is_br_guess, is_br_check, br_pred_taken;/home/tmp/eecs151-ahu/fpga-project-fa24-bugfree/hardware
     always @(*) begin  
       if ((instruction_s2[14:12] == `FNC_BEQ) && breq) br_taken_check = 1'b1;
       else if ((instruction_s2[14:12] == `FNC_BNE) && !breq) br_taken_check = 1'b1;
