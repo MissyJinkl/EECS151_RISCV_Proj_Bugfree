@@ -235,10 +235,17 @@ module cpu #(
     );
 
     // immediate generater
-    wire [31:0] imm_s1, imm_s2;
+    wire [31:0] imm_b4_nop, imm_s1, imm_s2;
     imm_gen imm_gen_ins (
-      .instruction(instruction_s1),
-      .imm(imm_s1)
+      .instruction(ins_mem),
+      .imm(imm_b4_nop)
+    );
+
+    mux2to1 imm_nop_mux (
+      .in0(imm_b4_nop),
+      .in1(0),
+      .sel(nop_control),
+      .out(imm_s1)
     );
 
     // pipeline registers between stage1 and stage2
