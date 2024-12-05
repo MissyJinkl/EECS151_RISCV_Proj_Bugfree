@@ -113,13 +113,13 @@ module cpu #(
     /* stage1: IFD */
 
     // pc_sel mux
-    wire [31:0] pc_0_4, alu_result, pc_jal, pc_reset, pc_d, alu_result_q;
+    wire [31:0] pc_0_4, alu_result, pc_reset, pc_d, alu_result_q;
     wire [2:0] pc_sel;
     assign pc_reset = RESET_PC;
     mux5to1 pc_sel_mux (
       .in0(pc_0_4),
       .in1(alu_result),
-      .in2(pc_jal),
+      .in2(0),
       .in3(pc_reset),
       .in4(alu_result_q),
       .sel(pc_sel),
@@ -147,14 +147,14 @@ module cpu #(
       .q(pc_q)
     );
 
-    // jal adder
+/*    // jal adder
     wire [31:0] jal_label;
     assign jal_label = {{12{instruction_s1[31]}}, instruction_s1[19:12], instruction_s1[20], instruction_s1[30:21], 1'b0};
     adder jal_adder (
       .in0(jal_label),
       .in1(pc_q),
       .out(pc_jal)
-    );
+    );*/
 
     // 0/4 mux and adder
     reg nop_control;
@@ -206,17 +206,17 @@ module cpu #(
     //wire nop_control;
     //assign nop_control = ((instruction_s2[6:2] == 5'b11001) || (instruction_s2[6:2] == 5'b11000)) ? 1 : 0; // if ins2 is jalr or branch
     
-    wire [31:0] zero_or_4;
+    wire [31:0] pc_4;
     mux2to1 zero_or_4_mux (
-      .in0(32'd4),
-      .in1(32'd0),
+      .in0(pc_4),
+      .in1(pc_q),
       .sel(nop_control),
-      .out(zero_or_4)
+      .out(pc_0_4)
     );
     adder pc_add4 (
       .in0(pc_q),
-      .in1(zero_or_4),
-      .out(pc_0_4)
+      .in1(32'd4),
+      .out(pc_4)
     );
 
     // pc30_mux and nop_mux
