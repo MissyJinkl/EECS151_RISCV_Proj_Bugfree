@@ -308,7 +308,7 @@ module cpu #(
       .q(brlt_q)
     );
     
-    // forwarding mux 1
+/*    // forwarding mux 1
     wire forward_sel_1, forward_sel_2;
     wire [31:0] data_to_reg;
     mux2to1 forwarding_mux1 (
@@ -325,18 +325,21 @@ module cpu #(
       .sel(forward_sel_2),
       .out(reg_rd2_s2)
     );
+*/
+    assign reg_rd2_q = reg_rd2_s2;
+    assign reg_rd1_q = reg_rd1_s2;
 
     // stage 2 control unit
     wire a_sel, b_sel, mem_wen, csr_we;
     wire [3:0] alu_sel;
     s2_control s2_CU (
       .instruction_s2(instruction_s2),
-      .instruction_s3(instruction_s3),
+      //.instruction_s3(instruction_s3),
       .pc(pc_s2),
       .alu_result(alu_result),
       .imem_ena(imem_ena),
-      .forward_sel_1(forward_sel_1),
-      .forward_sel_2(forward_sel_2),
+      //.forward_sel_1(forward_sel_1),
+      //.forward_sel_2(forward_sel_2),
       .brun(brun),
       .a_sel(a_sel),
       .b_sel(b_sel),
