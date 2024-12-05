@@ -1,8 +1,7 @@
 module s2_control(
-    input [31:0] instruction_s2, instruction_s3, alu_result, pc,
+    input [31:0] instruction_s2, alu_result, pc,
     output brun, a_sel, b_sel, mem_wen, csr_we, imem_ena,
     output reg [3:0] alu_sel,
-    output reg forward_sel_1, forward_sel_2
 );
 
     assign brun = instruction_s2[13];
@@ -49,7 +48,7 @@ module s2_control(
                     `FNC_OR: alu_sel = 4'd6;
                     `FNC_AND: alu_sel = 4'd7;
                     `FNC_SRL_SRA: alu_sel = instruction_s2[30] ? 4'd13 : 4'd5;
-                    default: alu_sel = 4'd0;
+                    default: alu_sel = 4'd0;*/ 
                 endcase
             end
             `OPC_CSR: begin
