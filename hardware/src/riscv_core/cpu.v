@@ -273,11 +273,14 @@ module cpu #(
 
     // stage 1 control unit
     wire hazard2_sel_1, hazard2_sel_2;
+    wire a_sel_d, b_sel_d;
     s1_control s1_CU (
       .instruction_s1(instruction_s1),
       .instruction_s3(instruction_s3),
       .hazard2_sel_1(hazard2_sel_1),
-      .hazard2_sel_2(hazard2_sel_2)
+      .hazard2_sel_2(hazard2_sel_2),
+      .a_sel_d(a_sel_d),
+      .b_sel_d(b_sel_d)
     );
 
     // 2 cycle hazard select mux
@@ -361,11 +364,24 @@ module cpu #(
       //.forward_sel_1(forward_sel_1),
       //.forward_sel_2(forward_sel_2),
       .brun(brun),
-      .a_sel(a_sel),
-      .b_sel(b_sel),
+      //.a_sel(a_sel),
+      //.b_sel(b_sel),
       .mem_wen(mem_wen),
       .csr_we(csr_we),
       .alu_sel(alu_sel)
+    );
+
+    // a_sel reg and b_sel reg
+    reg_1bit a_sel_reg(
+      .clk(clk),
+      .d(a_sel_d),
+      .q(a_sel)
+    );
+
+    reg_1bit b_sel_reg(
+      .clk(clk),
+      .d(b_sel_d),
+      .q(b_sel)
     );
 
     // ALU A mux and B mux

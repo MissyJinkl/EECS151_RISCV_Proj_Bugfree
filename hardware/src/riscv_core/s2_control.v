@@ -1,6 +1,6 @@
 module s2_control(
     input [31:0] instruction_s2, alu_result, pc,
-    output brun, a_sel, b_sel, mem_wen, csr_we, imem_ena,
+    output brun, mem_wen, csr_we, imem_ena,
     output reg [3:0] alu_sel
 );
 
@@ -13,8 +13,7 @@ module s2_control(
     assign opcode = instruction_s2[6:0];
     assign func3 = instruction_s2[14:12];
 
-    assign a_sel = ((opcode == `OPC_AUIPC) || (opcode == `OPC_JAL) || (opcode == `OPC_BRANCH)) ? 1'b1 : 1'b0;
-    assign b_sel = (opcode == `OPC_ARI_RTYPE) ? 1'b0 : 1'b1;
+    
     assign mem_wen = (opcode == `OPC_STORE) ? 1'b1 : 1'b0;
     always @(*) begin
         case(opcode)
