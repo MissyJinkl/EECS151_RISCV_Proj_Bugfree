@@ -1,7 +1,7 @@
 module s3_control(
-    input [31:0] instruction_s3, instruction_s2,
+    input [31:0] instruction_s3, instruction_s2, instruction_s1,
     input [31:0] addr,
-    input rst, breq, brlt, is_jal,
+    input rst, breq, brlt, is_jal, br_pred_taken_q, br_taken_check,
     input  uart_rx_valid,
     input  uart_tx_ready,
     input  [7:0] uart_rx_out,
@@ -9,9 +9,10 @@ module s3_control(
     input  [31:0] instr_counter,
     input  [31:0] br_instr_counter,
     input  [31:0] correct_br_counter,
-    //input br_pred_taken,
+    input bp_enable, br_pred_taken,
     output reg [2:0] mem_sel,
-    output reg [1:0] wb_sel, pc_sel,
+    output reg [1:0] wb_sel,
+    output reg [2:0] pc_sel,
     output reg reg_we,
     //output reg rx_data_out_ready,
     output [31:0] io_value
@@ -20,33 +21,51 @@ module s3_control(
     wire [2:0] func3;
     wire [4:0] opcode5_s2;
     wire [2:0] func3_s2;
+    wire [4:0] opcode5_s1;
+    wire [2:0] func3_s1;
     assign opcode5 = instruction_s3[6:2];
     assign func3 = instruction_s3[14:12];
     assign opcode5_s2 = instruction_s2[6:2];
     assign func3_s2 = instruction_s2[14:12];
+    assign opcode5_s1 = instruction_s1[6:2];
+    assign func3_s1 = instruction_s1[14:12];
 
     always @(*) begin
-        if (rst) pc_sel = 2'd3;
-        else if (is_jal) pc_sel = 2'd2;
-        else if (opcode5_s2 == `OPC_JALR_5) pc_sel = 2'd1; // if is jalr
-        else if (opcode5_s2 == `OPC_BRANCH_5) begin
-            if ((func3_s2 == `FNC_BEQ) && breq) pc_sel = 2'd1;
-            else if ((func3_s2 == `FNC_BNE) && !breq) pc_sel = 2'd1;
-            else if ((func3_s2 == `FNC_BLT) && brlt) pc_sel = 2'd1;
-            else if ((func3_s2 == `FNC_BGE) && !brlt) pc_sel = 2'd1;
-            else if ((func3_s2 == `FNC_BLTU) && brlt) pc_sel = 2'd1;
-            else if ((func3_s2 == `FNC_BGEU) && !brlt) pc_sel = 2'd1;
-            else pc_sel = 2'd0;
+        if (rst) pc_sel = 3'd3;
+        else if (is_jal) pc_sel = 3'd2;
+        else if (opcode5_s2 == `OPC_JALR_5) pc_sel = 3'd1; // if is jalr
+        else if (opcode5_s1 == `OPC_BRANCH_5) begin
+            if (!bp_enable) begin
+                pc_sel = 3'd0;
+            end else begin
+                pc_sel = br_pred_taken ? 3'd2 : 3'd0;
+            end
         end
-        else pc_sel = 2'd0;
+        else if (opcode5_s2 == `OPC_BRANCH_5) begin
+            if (!bp_enable) begin
+                if ((func3_s2 == `FNC_BEQ) && breq) pc_sel = 3'd1;
+                else if ((func3_s2 == `FNC_BNE) && !breq) pc_sel = 3'd1;
+                else if ((func3_s2 == `FNC_BLT) && brlt) pc_sel = 3'd1;
+                else if ((func3_s2 == `FNC_BGE) && !brlt) pc_sel = 3'd1;
+                else if ((func3_s2 == `FNC_BLTU) && brlt) pc_sel = 3'd1;
+                else if ((func3_s2 == `FNC_BGEU) && !brlt) pc_sel = 3'd1;
+                else pc_sel = 3'd0;
+            end else begin
+                if ((br_taken_check != br_pred_taken_q) && (br_pred_taken_q == 1'b0)) pc_sel = 3'd1;
+                else if ((br_taken_check != br_pred_taken_q) && (br_pred_taken_q == 1'b1)) pc_sel = 3'd4;
+                else pc_sel = 3'd0;
+            end
+        end
+        else pc_sel = 3'd0;
     end
+
     reg [31:0] counter_num;
     wire [31:0] uart_value;
     wire [31:0] uart_control = {30'b0, uart_rx_valid, uart_tx_ready};
     wire [31:0] uart_reciever_data = {24'b0, uart_rx_out};
     assign uart_value = (addr[2]) ? uart_reciever_data : uart_control;
     //assign counter_num = (addr[2]) ? instr_counter : cyc_counter;
-    assign io_value = (addr[4]) ? counter_num : uart_value;
+    assign io_value = (addr[4] || addr[5]) ? counter_num : uart_value;
     always @(*) begin
         if (addr == 32'h80000010) counter_num = cyc_counter;
         else if (addr == 32'h80000014) counter_num = instr_counter;

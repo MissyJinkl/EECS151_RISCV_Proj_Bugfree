@@ -113,14 +113,26 @@ module cpu #(
     /* stage1: IFD */
 
     // pc_sel mux
-    wire [31:0] pc_0_4, alu_result, pc_jal, pc_reset, pc_d;
-    wire [1:0] pc_sel;
+    wire [31:0] pc_0_4, alu_result, pc_jal, pc_reset, pc_d, pc_br, pc_br_mi4;
+    wire [31:0] pc_q;
+    wire [2:0] pc_sel;
     assign pc_reset = RESET_PC;
-    mux4to1 pc_sel_mux (
+    reg32 pc_br_mux (
+      .clk(clk),
+      .d(pc_q),
+      .q(pc_br_mi4)
+    );
+    adder pc_br_adder (
+      .in0(pc_br_mi4),
+      .in1(32'h4),
+      .out(pc_br)
+    );
+    mux5to1 pc_sel_mux (
       .in0(pc_0_4),
       .in1(alu_result),
       .in2(pc_jal),
       .in3(pc_reset),
+      .in4(pc_br),
       .sel(pc_sel),
       .out(pc_d)
     );
@@ -139,18 +151,26 @@ module cpu #(
     assign wa = instruction_s3[11:7];
 
     // pc_register
-    wire [31:0] pc_q;
+    
     reg32 pc_register (
       .clk(clk),
       .d(pc_d),
       .q(pc_q)
     );
 
-    // jal adder
-    wire [31:0] jal_label;
+    // jal adder and jal_br_sel mux
+    wire [31:0] jal_label, br_label, jal_br_label;
+    wire label_sel;
     assign jal_label = {{12{instruction_s1[31]}}, instruction_s1[19:12], instruction_s1[20], instruction_s1[30:21], 1'b0};
-    adder jal_adder (
+    assign br_label = {{20{instruction_s1[31]}}, instruction_s1[7], instruction_s1[30:25], instruction_s1[11:8], 1'b0};
+    mux2to1 jal_br_mux (
       .in0(jal_label),
+      .in1(br_label),
+      .sel(label_sel),
+      .out(jal_br_label)
+    );
+    adder jal_adder (
+      .in0(jal_br_label),
       .in1(pc_q),
       .out(pc_jal)
     );
@@ -158,11 +178,12 @@ module cpu #(
     // 0/4 mux and adder
     reg nop_control;
     reg br_taken_check;
+    wire br_pred_taken_q, correct_br_ctr_ce;
     always @(*)begin
       if (instruction_s2[6:2] == 5'b11001) nop_control = 1'b1;
       else if(instruction_s2[6:2] == 5'b11000) begin // is branch
-        if (bp_enable && br_taken_check) nop_control = 1'b1;
-        else if (!bp_enable) nop_control = 1'b1;
+        if (bp_enable && (br_taken_check != br_pred_taken_q)) nop_control = 1'b1;
+        else if (!bp_enable && br_taken_check) nop_control = 1'b1;
         else nop_control = 1'b0;
       end
       else nop_control = 1'b0;
@@ -171,7 +192,7 @@ module cpu #(
     wire [31:0] zero_or_4;
     mux2to1 zero_or_4_mux (
       .in0(32'd4),
-      .in1(32'd0),
+      .in1(32'd4),
       .sel(nop_control),
       .out(zero_or_4)
     );
@@ -232,7 +253,9 @@ module cpu #(
       .instruction_s1(instruction_s1),
       .instruction_s3(instruction_s3),
       .hazard2_sel_1(hazard2_sel_1),
-      .hazard2_sel_2(hazard2_sel_2)
+      .hazard2_sel_2(hazard2_sel_2),
+      .label_sel(label_sel),
+      .bp_enable(bp_enable)
     );
 
     // 2 cycle hazard select mux
@@ -472,21 +495,20 @@ module cpu #(
     reg_rst_ce br_instr_ctr (.q(br_instr_counter_q),
                .d(br_instr_counter_d),
                .rst(rst || ctr_rst),
-               .ce(is_br_check),
+               .ce(is_br_guess),
                .clk(clk));
     assign br_instr_counter_d = br_instr_counter_q + 1;
 
     // Correct branch prediction counter
     wire [31:0] correct_br_counter_d;
     wire [31:0] correct_br_counter_q;
-    wire br_pred_taken_q, correct_br_ctr_ce;
     reg_1 br_pred_taken_reg (
       .d(br_pred_taken),
       .q(br_pred_taken_q),
       .clk(clk),
       .rst(rst || ctr_rst)
     );
-    assign correct_br_ctr_ce = bp_enable && (br_pred_taken_q == br_taken_check);
+    assign correct_br_ctr_ce = (is_br_check && bp_enable && (br_pred_taken_q == br_taken_check)) || (!bp_enable && is_br_check && !br_taken_check);
     reg_rst_ce correct_br_ctr (.q(correct_br_counter_q),
                .d(correct_br_counter_d),
                .rst(rst || ctr_rst),
@@ -499,10 +521,13 @@ module cpu #(
     s3_control s3_CU(
       .instruction_s3(instruction_s3),
       .instruction_s2(instruction_s2),
+      .instruction_s1(instruction_s1),
       .addr(alu_result_q),
       .rst(rst),
       .breq(breq),
       .brlt(brlt),
+      .br_pred_taken_q(br_pred_taken_q),
+      .br_taken_check(br_taken_check),
       .uart_rx_valid(uart_rx_data_out_valid),
       .uart_tx_ready(uart_tx_data_in_ready),
       .uart_rx_out(uart_rx_data_out),
@@ -510,7 +535,8 @@ module cpu #(
       .instr_counter(instr_counter_q),
       .br_instr_counter(br_instr_counter_q),
       .correct_br_counter(correct_br_counter_q),
-      //.br_pred_taken(br_pred_taken),
+      .bp_enable(bp_enable),
+      .br_pred_taken(br_pred_taken),
       .mem_sel(mem_sel),
       .is_jal(is_jal),
       .wb_sel(wb_sel),

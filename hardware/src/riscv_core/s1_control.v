@@ -1,6 +1,7 @@
 module s1_control(
     input [31:0] instruction_s1, instruction_s3,
-    output reg hazard2_sel_1, hazard2_sel_2
+    input bp_enable,
+    output reg hazard2_sel_1, hazard2_sel_2, label_sel
 );
     // handle 2 cycle hazard
     wire [6:0] opcode_s1, opcode_s3;
@@ -63,5 +64,10 @@ module s1_control(
         hazard2_sel_2 = 1'b1;
     end
     end
+
+    always @(*) begin
+        label_sel = (bp_enable && opcode_s1 == `OPC_BRANCH) ? 1'b1 : 1'b0;
+    end
+
     
 endmodule
