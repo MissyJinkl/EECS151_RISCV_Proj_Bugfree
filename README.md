@@ -1,3 +1,6 @@
+# Overview
+This is a course project of EECS151LB in berkeley, Fall 2024. We built a 3-stage RISC-V cpu and made the frequency up to 100MHz (branch main). For checkpoint3, we sacraficed frequency for CPI (cycle per instruction), and made it nearly 1.
+
 # EECS 151/251A FPGA Project Skeleton for Fall 2024
 Check out the [Project Overview](https://inst.eecs.berkeley.edu/~eecs151/fa24/static/fpga/project) to see the specs.
 
